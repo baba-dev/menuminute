@@ -128,3 +128,344 @@ DO $block$ DECLARE t text; BEGIN
     EXECUTE format('CREATE POLICY food_owner_only ON %I FOR ALL TO menuminute_owner USING (true) WITH CHECK (true)',t);
   END LOOP;
 END $block$;
+
+-- Approved media identity is entry+path, never a generic merchant upload.
+CREATE UNIQUE INDEX food_media_entry_path_key ON food_media(entry_id,path);
+
+-- The whitelisted public projection never includes draft notes, editor history,
+-- candidate imports, privileged event metadata or unreviewed revisions.
+CREATE FUNCTION app_private.food_public_payload(p_entry food_entries,p_revision food_revisions)
+RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $payload$
+ SELECT jsonb_build_object(
+   'id',p_entry.id,'kind',p_entry.kind,'slug',p_entry.slug,
+   'title',p_revision.content->>'title',
+   'eyebrow',p_revision.content->>'eyebrow',
+   'description',p_revision.content->>'description',
+   'tint',p_revision.content->>'tint',
+   'imagePath',p_revision.content->>'imagePath',
+   'imageAlt',p_revision.content->>'imageAlt',
+   'aliases',coalesce(p_revision.content->'aliases','[]'::jsonb),
+   'facts',coalesce(p_revision.content->'facts','[]'::jsonb),
+   'sections',coalesce(p_revision.content->'sections','[]'::jsonb),
+   'relatedSlugs',coalesce(p_revision.content->'relatedSlugs','[]'::jsonb),
+   'caution',p_revision.content->>'caution',
+   'sourceUrls',coalesce(p_revision.content->'sourceUrls','[]'::jsonb),
+   'status','published',
+   'reviewedBy',(SELECT u.name FROM users u WHERE u.id=p_revision.reviewed_by),
+   'reviewedAt',p_revision.reviewed_at,
+   'publishedAt',p_entry.published_at
+ );
+$payload$;
+REVOKE ALL ON FUNCTION app_private.food_public_payload(food_entries,food_revisions)
+  FROM PUBLIC,menuminute_app,menuminute_worker;
+
+CREATE FUNCTION app_private.food_public_entry(p_kind text,p_slug text)
+RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $entry$
+  SELECT app_private.food_public_payload(e,r)
+    FROM food_entries e JOIN food_revisions r
+      ON r.entry_id=e.id AND r.id=e.published_revision_id
+   WHERE e.kind=p_kind AND e.slug=p_slug
+     AND e.published_at IS NOT NULL AND r.approved
+     AND r.reviewed_at IS NOT NULL AND r.reviewed_by IS NOT NULL
+   LIMIT 1;
+$entry$;
+REVOKE ALL ON FUNCTION app_private.food_public_entry(text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_public_entry(text,text) TO menuminute_app;
+
+-- Bounded search across reviewed publication only; drafts and archived revisions never leak.
+CREATE FUNCTION app_private.food_public_list(p_kind text,p_query text,p_limit integer)
+RETURNS TABLE(entry jsonb) LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $list$
+  SELECT app_private.food_public_payload(e,r) AS entry
+    FROM food_entries e JOIN food_revisions r
+      ON r.entry_id=e.id AND r.id=e.published_revision_id
+   WHERE e.published_at IS NOT NULL AND r.approved
+     AND r.reviewed_by IS NOT NULL AND r.reviewed_at IS NOT NULL
+     AND (p_kind IS NULL OR p_kind='' OR e.kind=p_kind)
+     AND (p_query IS NULL OR btrim(p_query)='' OR
+       to_tsvector('simple',e.search_text) @@ plainto_tsquery('simple',left(p_query,100))
+       OR e.search_text ILIKE ('%' || replace(replace(left(p_query,100),'%','\\%'),'_','\\_') || '%') ESCAPE '\\'
+     )
+   ORDER BY e.published_at DESC,e.id
+   LIMIT GREATEST(0,LEAST(coalesce(p_limit,30),100));
+$list$;
+REVOKE ALL ON FUNCTION app_private.food_public_list(text,text,integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_public_list(text,text,integer) TO menuminute_app;
+
+CREATE FUNCTION app_private.food_public_redirect(p_kind text,p_slug text)
+RETURNS text LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $redirect$
+  SELECT e.slug FROM food_redirects d JOIN food_entries e ON e.id=d.entry_id
+    WHERE d.kind=p_kind AND d.old_slug=p_slug AND e.published_revision_id IS NOT NULL
+    LIMIT 1;
+$redirect$;
+REVOKE ALL ON FUNCTION app_private.food_public_redirect(text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_public_redirect(text,text) TO menuminute_app;
+
+CREATE FUNCTION app_private.food_editorial_list(p_query text,p_status text,p_limit integer)
+RETURNS TABLE(item jsonb) LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $list$
+BEGIN
+  IF NOT app_private.is_super_admin(NULLIF(current_setting('app.actor_id',true),''))
+  THEN RAISE EXCEPTION 'Unauthorized editorial access' USING ERRCODE='42501'; END IF;
+  RETURN QUERY
+    SELECT jsonb_build_object(
+      'id',e.id,'kind',e.kind,'slug',e.slug,
+      'title',coalesce(r.content->>'title',e.slug),'status',e.status,
+      'version',e.version,'createdAt',e.created_at,'updatedAt',e.updated_at,
+      'hasPublishedVersion',e.published_revision_id IS NOT NULL,'publishedAt',e.published_at
+    )
+    FROM food_entries e
+      LEFT JOIN food_revisions r ON r.id=coalesce(e.draft_revision_id,e.published_revision_id)
+    WHERE (p_status IS NULL OR p_status='' OR e.status=p_status)
+      AND (p_query IS NULL OR btrim(p_query)='' OR e.slug ILIKE '%'||left(p_query,100)||'%'
+           OR r.content->>'title' ILIKE '%'||left(p_query,100)||'%')
+    ORDER BY e.updated_at DESC,e.id
+    LIMIT GREATEST(1,LEAST(coalesce(p_limit,80),100));
+END;
+$list$;
+REVOKE ALL ON FUNCTION app_private.food_editorial_list(text,text,integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_editorial_list(text,text,integer) TO menuminute_app;
+
+CREATE FUNCTION app_private.food_editorial_detail(p_id text)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $detail$
+DECLARE e food_entries%ROWTYPE;
+BEGIN
+ IF NOT app_private.is_super_admin(NULLIF(current_setting('app.actor_id',true),''))
+ THEN RAISE EXCEPTION 'Unauthorized editorial access' USING ERRCODE='42501'; END IF;
+ SELECT * INTO e FROM food_entries WHERE id=p_id;
+ IF NOT FOUND THEN RETURN NULL; END IF;
+ RETURN jsonb_build_object(
+   'id',e.id,'kind',e.kind,'slug',e.slug,
+   'title',coalesce((SELECT content->>'title' FROM food_revisions WHERE id=e.draft_revision_id),e.slug),
+   'status',e.status,'version',e.version,
+   'createdAt',e.created_at,'updatedAt',e.updated_at,
+   'hasPublishedVersion',e.published_revision_id IS NOT NULL,'publishedAt',e.published_at,
+   'draftRevisionId',e.draft_revision_id,'reviewRevisionId',e.review_revision_id,
+   'approvedRevisionId',e.approved_revision_id,'publishedRevisionId',e.published_revision_id,
+   'draft',(SELECT r.content FROM food_revisions r WHERE r.id=e.draft_revision_id),
+   'versions',coalesce((SELECT jsonb_agg(jsonb_build_object(
+       'id',r.id,'version',r.version,'authorId',r.author_id,'reviewedBy',r.reviewed_by,
+       'reviewedAt',r.reviewed_at,'createdAt',r.created_at,'approved',r.approved
+       ) ORDER BY r.version DESC)
+     FROM food_revisions r WHERE r.entry_id=e.id),'[]'::jsonb),
+   'events',coalesce((SELECT jsonb_agg(jsonb_build_object(
+       'action',v.action,'actorId',v.actor_id,'createdAt',v.created_at,
+       'revisionId',v.revision_id
+       ) ORDER BY v.created_at DESC)
+     FROM (SELECT * FROM food_editorial_events WHERE entry_id=e.id
+           ORDER BY created_at DESC LIMIT 30) v),'[]'::jsonb)
+ );
+END;
+$detail$;
+REVOKE ALL ON FUNCTION app_private.food_editorial_detail(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_editorial_detail(text) TO menuminute_app;
+
+-- One entrypoint for editorial mutations. Each request is recorded once;
+-- the same idempotency key returns the same receipt without consuming a second TOTP.
+CREATE FUNCTION app_private.food_editorial_command(
+ p_action text,p_target text,p_data jsonb,p_key text
+) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $command$
+DECLARE
+ actor text := nullif(current_setting('app.actor_id',true),'');
+ session_id text := nullif(current_setting('app.session_id',true),'');
+ existing admin_command_receipts%ROWTYPE;
+ e food_entries%ROWTYPE;
+ r food_revisions%ROWTYPE;
+ rev_id text;
+ payload jsonb;
+ result jsonb := '{}'::jsonb;
+ content_digest text;
+ source_count integer;
+ s text;
+ target_revision text;
+ affected integer;
+ reason text;
+BEGIN
+ IF actor IS NULL OR session_id IS NULL OR NOT app_private.is_super_admin(actor)
+   OR p_action NOT IN ('create','save','submit','approve','publish','unpublish','restore','media.approve','import')
+   OR p_key IS NULL OR p_key !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+   OR p_target IS NULL OR length(p_target) NOT BETWEEN 1 AND 100
+   OR p_data IS NULL OR jsonb_typeof(p_data)<>'object'
+ THEN RAISE EXCEPTION 'Invalid or unauthorized editorial command' USING ERRCODE='42501'; END IF;
+
+ PERFORM pg_advisory_xact_lock(hashtextextended(actor||':'||p_key,0));
+ SELECT * INTO existing FROM admin_command_receipts
+   WHERE actor_id=actor AND request_key=p_key;
+ IF FOUND THEN
+   IF existing.action<>'food.'||p_action OR existing.target_id<>p_target OR existing.payload<>p_data
+   THEN RAISE EXCEPTION 'Editorial idempotency conflict' USING ERRCODE='23505'; END IF;
+   RETURN existing.result;
+ END IF;
+
+ IF NOT app_private.require_step_up()
+ THEN RAISE EXCEPTION 'Verify a privileged session at /account/security' USING ERRCODE='42501'; END IF;
+
+ IF p_action IN ('create','save','import') THEN
+   payload := p_data->'content';
+   IF jsonb_typeof(payload)<>'object' OR payload->>'kind' NOT IN ('dishes','ingredients','cuisines','terms','compare')
+     OR coalesce(payload->>'slug','') !~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+     OR length(payload->>'slug')>90
+     OR length(btrim(coalesce(payload->>'title',''))) NOT BETWEEN 3 AND 100
+     OR length(btrim(coalesce(payload->>'description',''))) NOT BETWEEN 35 AND 320
+     OR jsonb_typeof(payload->'sections')<>'array'
+     OR jsonb_array_length(payload->'sections') NOT BETWEEN 2 AND 12
+     OR jsonb_typeof(payload->'sourceUrls')<>'array'
+     OR jsonb_array_length(payload->'sourceUrls')>20
+     OR jsonb_typeof(payload->'facts')<>'array'
+     OR jsonb_array_length(payload->'facts') NOT BETWEEN 2 AND 8
+     OR length(payload::text)>28000
+   THEN RAISE EXCEPTION 'Invalid editorial content fields' USING ERRCODE='22023'; END IF;
+   IF EXISTS(SELECT 1 FROM jsonb_array_elements_text(payload->'sourceUrls') AS source(url)
+             WHERE url !~ '^https://' OR length(url)>1000)
+   THEN RAISE EXCEPTION 'Only HTTPS editorial sources are permitted' USING ERRCODE='22023'; END IF;
+   IF p_action IN ('create','import') THEN
+     IF p_target<>'new' THEN RAISE EXCEPTION 'Creation must target new' USING ERRCODE='22023'; END IF;
+     INSERT INTO food_entries(kind,slug,created_by,updated_by)
+     VALUES(payload->>'kind',payload->>'slug',actor,actor) RETURNING * INTO e;
+   ELSE
+     SELECT * INTO e FROM food_entries WHERE id=p_target FOR UPDATE;
+     IF NOT FOUND THEN RAISE EXCEPTION 'Unknown food entry' USING ERRCODE='22023'; END IF;
+     IF (p_data->>'expectedVersion')::int IS DISTINCT FROM e.version
+       OR e.kind<>payload->>'kind' OR e.slug<>payload->>'slug'
+     THEN RAISE EXCEPTION 'Concurrent editorial revision or canonical identity change' USING ERRCODE='40001'; END IF;
+   END IF;
+   content_digest := encode(sha256(convert_to(payload::text,'UTF8')),'hex');
+   INSERT INTO food_revisions(entry_id,version,content,digest,author_id)
+   VALUES(e.id,e.version+1,payload,content_digest,actor) RETURNING id INTO rev_id;
+   UPDATE food_entries SET version=version+1, status='draft',draft_revision_id=rev_id,
+     review_revision_id=NULL,approved_revision_id=NULL,updated_by=actor,updated_at=clock_timestamp()
+     WHERE id=e.id;
+   INSERT INTO food_sources(url)
+    SELECT DISTINCT source.url FROM jsonb_array_elements_text(payload->'sourceUrls') source(url)
+    ON CONFLICT(url) DO NOTHING;
+   INSERT INTO food_entry_sources(revision_id,source_id)
+    SELECT rev_id, s.id FROM food_sources s
+      JOIN jsonb_array_elements_text(payload->'sourceUrls') source(url) ON source.url=s.url
+    ON CONFLICT DO NOTHING;
+   IF payload->>'imagePath' IS NOT NULL THEN
+     INSERT INTO food_media(entry_id,path,alt_text)
+     VALUES(e.id,payload->>'imagePath',payload->>'imageAlt')
+     ON CONFLICT(entry_id,path) DO NOTHING;
+   END IF;
+   result:=jsonb_build_object('id',e.id,'revisionId',rev_id,
+     'version',e.version+1,'status','draft','digest',content_digest);
+ ELSIF p_action='media.approve' THEN
+   SELECT * INTO e FROM food_entries WHERE id=p_target FOR UPDATE;
+   IF NOT FOUND OR p_data->>'path' IS NULL
+     OR length(coalesce(p_data->>'attribution',''))>240
+     OR p_data->>'license' NOT IN ('owned','commissioned','cc0','cc-by','licensed')
+   THEN RAISE EXCEPTION 'Invalid media verification' USING ERRCODE='22023'; END IF;
+   UPDATE food_media SET rights_approved=true,license=p_data->>'license',
+     attribution=coalesce(p_data->>'attribution',''),
+     verified_by=actor,verified_at=clock_timestamp()
+   WHERE entry_id=e.id AND path=p_data->>'path' AND rights_approved=false;
+   GET DIAGNOSTICS affected=ROW_COUNT;
+   IF affected<>1 THEN RAISE EXCEPTION 'Media not found or already verified' USING ERRCODE='22023'; END IF;
+   result:=jsonb_build_object('id',e.id,'mediaApproved',true);
+ ELSE
+   SELECT * INTO e FROM food_entries WHERE id=p_target FOR UPDATE;
+   IF NOT FOUND THEN RAISE EXCEPTION 'Unknown food entry' USING ERRCODE='22023'; END IF;
+   IF (p_data->>'expectedVersion')::int IS DISTINCT FROM e.version THEN
+     RAISE EXCEPTION 'Concurrent editorial revision' USING ERRCODE='40001'; END IF;
+   IF p_action='submit' THEN
+     IF e.status<>'draft' OR e.draft_revision_id IS NULL
+     THEN RAISE EXCEPTION 'Only current drafts may be submitted' USING ERRCODE='22023'; END IF;
+     SELECT * INTO r FROM food_revisions WHERE id=e.draft_revision_id;
+     SELECT count(DISTINCT source_id) INTO source_count
+       FROM food_entry_sources WHERE revision_id=r.id;
+     IF source_count<2 OR length(r.content::text)<950
+     THEN RAISE EXCEPTION 'Article needs substantive researched content and two references' USING ERRCODE='22023'; END IF;
+     UPDATE food_entries SET status='in_review',review_revision_id=r.id,
+        updated_by=actor,updated_at=clock_timestamp() WHERE id=e.id;
+     rev_id:=r.id;
+     result:=jsonb_build_object('id',e.id,'status','in_review');
+   ELSIF p_action='approve' THEN
+     IF e.status<>'in_review' OR e.review_revision_id IS NULL
+     THEN RAISE EXCEPTION 'A submitted revision is required' USING ERRCODE='22023'; END IF;
+     SELECT * INTO r FROM food_revisions WHERE id=e.review_revision_id FOR UPDATE;
+     IF r.author_id=actor THEN
+       RAISE EXCEPTION 'A separate reviewer must approve authored content' USING ERRCODE='42501'; END IF;
+     SELECT count(DISTINCT source_id) INTO source_count
+       FROM food_entry_sources WHERE revision_id=r.id;
+     IF source_count<2 THEN RAISE EXCEPTION 'Two sources required' USING ERRCODE='22023'; END IF;
+     IF r.content->>'imagePath' IS NOT NULL AND NOT EXISTS(
+       SELECT 1 FROM food_media m WHERE m.entry_id=e.id AND m.path=r.content->>'imagePath'
+         AND m.rights_approved AND m.verified_by IS NOT NULL
+     ) THEN RAISE EXCEPTION 'Artwork rights verification required' USING ERRCODE='22023'; END IF;
+     UPDATE food_revisions SET approved=true,reviewed_by=actor,reviewed_at=clock_timestamp()
+       WHERE id=r.id AND NOT approved;
+     IF NOT FOUND THEN RAISE EXCEPTION 'Revision already approved' USING ERRCODE='22023'; END IF;
+     UPDATE food_entries SET status='approved',approved_revision_id=r.id,
+       updated_by=actor,updated_at=clock_timestamp() WHERE id=e.id;
+     rev_id:=r.id;
+     result:=jsonb_build_object('id',e.id,'status','approved');
+   ELSIF p_action='publish' THEN
+     IF e.status<>'approved' OR e.approved_revision_id IS NULL
+     THEN RAISE EXCEPTION 'Only an independently approved revision can publish' USING ERRCODE='22023'; END IF;
+     SELECT * INTO r FROM food_revisions WHERE id=e.approved_revision_id AND entry_id=e.id;
+     IF NOT FOUND OR NOT r.approved OR r.reviewed_by IS NULL
+       OR r.reviewed_at IS NULL OR r.reviewed_by=r.author_id
+     THEN RAISE EXCEPTION 'Invalid reviewed content' USING ERRCODE='42501'; END IF;
+     UPDATE food_entries SET published_revision_id=r.id,published_at=clock_timestamp(),
+       status='published',search_text=coalesce(r.content->>'title','')||' '||
+         coalesce(r.content->>'description','')||' '||coalesce(r.content->>'slug','')||' '||
+         coalesce((SELECT string_agg(value,' ') FROM jsonb_array_elements_text(r.content->'aliases')),''),
+       updated_by=actor,updated_at=clock_timestamp() WHERE id=e.id;
+     DELETE FROM food_aliases WHERE entry_id=e.id;
+     INSERT INTO food_aliases(entry_id,alias,normalized)
+     SELECT DISTINCT ON (lower(btrim(alias))) e.id,alias,lower(btrim(alias))
+       FROM jsonb_array_elements_text(r.content->'aliases') x(alias)
+       WHERE length(btrim(alias)) BETWEEN 2 AND 90
+       ORDER BY lower(btrim(alias)),alias;
+     DELETE FROM food_relations WHERE entry_id=e.id;
+     INSERT INTO food_relations(entry_id,related_entry_id,relation)
+       SELECT e.id,target.id,'related'
+       FROM food_entries target
+       JOIN jsonb_array_elements_text(r.content->'relatedSlugs') related(slug)
+         ON target.slug=related.slug AND target.id<>e.id
+       WHERE target.published_revision_id IS NOT NULL
+       ON CONFLICT DO NOTHING;
+     rev_id:=r.id;
+     result:=jsonb_build_object('id',e.id,'status','published','revisionId',rev_id);
+   ELSIF p_action='unpublish' THEN
+     IF e.published_revision_id IS NULL THEN
+       RAISE EXCEPTION 'Entry is not published' USING ERRCODE='22023'; END IF;
+     rev_id:=e.published_revision_id;
+     UPDATE food_entries SET published_revision_id=NULL,published_at=NULL,
+       status='archived',search_text='',updated_by=actor,updated_at=clock_timestamp()
+       WHERE id=e.id;
+     DELETE FROM food_aliases WHERE entry_id=e.id;
+     result:=jsonb_build_object('id',e.id,'status','archived');
+   ELSIF p_action='restore' THEN
+     target_revision:=p_data->>'revisionId';
+     SELECT * INTO r FROM food_revisions WHERE id=target_revision AND entry_id=e.id;
+     IF NOT FOUND OR NOT r.approved OR r.reviewed_by IS NULL OR r.reviewed_at IS NULL
+     THEN RAISE EXCEPTION 'Only a previously approved revision can be restored' USING ERRCODE='22023'; END IF;
+     UPDATE food_entries SET published_revision_id=r.id,published_at=clock_timestamp(),
+       status='published',search_text=coalesce(r.content->>'title','')||' '||
+         coalesce(r.content->>'description','')||' '||coalesce(r.content->>'slug',''),
+       updated_by=actor,updated_at=clock_timestamp() WHERE id=e.id;
+     rev_id:=r.id;
+     result:=jsonb_build_object('id',e.id,'status','published','revisionId',rev_id);
+   END IF;
+ END IF;
+
+ INSERT INTO food_editorial_events(entry_id,revision_id,action,actor_id,details)
+ VALUES(e.id,rev_id,p_action,actor,p_data - 'content');
+ INSERT INTO admin_audit_logs(id,actor_id,actor_email,action,target_type,target_id,details)
+ VALUES(gen_random_uuid()::text,actor,
+        (SELECT u.email FROM users u WHERE u.id=actor),
+        'food.'||p_action,'food_entry',e.id,
+        jsonb_build_object('revisionId',rev_id,'requestKey',p_key));
+ INSERT INTO admin_command_receipts(actor_id,request_key,action,target_id,payload,result)
+ VALUES(actor,p_key,'food.'||p_action,p_target,p_data,result);
+ RETURN result;
+END;
+$command$;
+REVOKE ALL ON FUNCTION app_private.food_editorial_command(text,text,jsonb,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_editorial_command(text,text,jsonb,text) TO menuminute_app;
