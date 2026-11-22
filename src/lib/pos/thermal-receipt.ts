@@ -2,6 +2,8 @@
  * This is a client-side local print convenience, NOT a statutory/fiscal document.
  * Receipt pricing, taxes, statuses and customer details must never be recalculated here.
  */
+import { payBlockToEscPos, renderPayBlock, type PayBlockInput } from "./pay-block";
+
 export type ThermalPaper = "58" | "80";
 
 export type ThermalReceipt = {
@@ -32,6 +34,8 @@ export type ThermalReceipt = {
   total: string;
   closingStatus: string;
   taxDisclaimer: string;
+  /** Optional UPI "Scan & Pay" block for unpaid INR bills; omitted when it cannot be rendered. */
+  payBlock?: PayBlockInput | null;
 };
 
 export function thermalColumns(paper: ThermalPaper): number {
@@ -152,6 +156,13 @@ export function encodeThermalReceipt(receipt: ThermalReceipt, paper: ThermalPape
   for (const s of pair(receipt.totalLabel, receipt.total, width)) draw(s);
   esc(data, 0x1b, 0x45, 0x00);
   draw(separator);
+  const payBitmap = receipt.payBlock ? renderPayBlock(receipt.payBlock, paper) : null;
+  if (payBitmap) {
+    // The raster is already paper-width; draw it left-aligned between blank lines.
+    line(data, "");
+    for (const byte of payBlockToEscPos(payBitmap)) data.push(byte);
+    line(data, "");
+  }
   esc(data, 0x1b, 0x61, 0x01);
   for (const s of wrapText(receipt.closingStatus, width)) draw(s);
   for (const s of wrapText(receipt.taxDisclaimer, width)) draw(s);

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 
-export type WizardStepId = "identity" | "location" | "operations" | "contact" | "launch";
+export type WizardStepId =
+  "identity" | "location" | "operations" | "contact" | "payments" | "launch";
 
 interface WizardMediaSlotProps {
   step: WizardStepId;
@@ -406,6 +407,51 @@ function InlineStepArt({ step }: { step: WizardStepId }) {
             strokeWidth="1.5"
             strokeLinecap="round"
             opacity="0.75"
+          />
+        </svg>
+      );
+
+    case "payments":
+      return (
+        <svg
+          viewBox="0 0 400 240"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="wizard-media-svg"
+        >
+          <rect width="400" height="240" rx="16" fill="#1c1917" />
+          <rect x="130" y="40" width="140" height="160" rx="10" fill="#fff7ed" />
+          {[
+            [146, 56],
+            [226, 56],
+            [146, 136],
+          ].map(([x, y]) => (
+            <g key={`${x}-${y}`}>
+              <rect x={x} y={y} width="28" height="28" fill="#1c1917" />
+              <rect x={x! + 6} y={y! + 6} width="16" height="16" fill="#fff7ed" />
+              <rect x={x! + 10} y={y! + 10} width="8" height="8" fill="#f97316" />
+            </g>
+          ))}
+          {[
+            [186, 62],
+            [196, 72],
+            [186, 92],
+            [206, 92],
+            [226, 112],
+            [196, 122],
+            [216, 136],
+            [236, 146],
+            [196, 152],
+            [226, 166],
+          ].map(([x, y]) => (
+            <rect key={`${x}-${y}`} x={x} y={y} width="10" height="10" fill="#1c1917" />
+          ))}
+          <path
+            d="M96 120h22m-8-8 8 8-8 8M304 120h-22m8-8-8 8 8 8"
+            stroke="#f97316"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       );

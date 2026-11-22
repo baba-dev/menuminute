@@ -189,3 +189,15 @@
     min-height: 44px;
   }
 }
+
+/* UPI "Scan & Pay" block: the exact bitmap sent to the thermal printer, drawn crisp on screen. */
+.receipt-pay-block {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 10px 0;
+  image-rendering: pixelated;
+  break-inside: avoid;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
