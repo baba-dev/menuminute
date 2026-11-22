@@ -159,7 +159,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
   // Only independently reviewed, explicitly published editorial guides are indexable.
   // Preview/design profiles are NEVER promoted into the sitemap.
-  const verifiedFood=await listPublishedFoodSitemap();
+  const verifiedFood = await listPublishedFoodSitemap();
   const foodRoutes: MetadataRoute.Sitemap = verifiedFood.map((entry) => ({
     url: BASE_URL + foodPath(entry),
     lastModified: entry.reviewed_at,
