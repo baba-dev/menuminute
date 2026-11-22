@@ -469,3 +469,86 @@ END;
 $command$;
 REVOKE ALL ON FUNCTION app_private.food_editorial_command(text,text,jsonb,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.food_editorial_command(text,text,jsonb,text) TO menuminute_app;
+
+-- Idempotent catalogue candidate queue. NOT an article, revision or public page.
+CREATE TABLE food_candidates (
+  catalogue_id text PRIMARY KEY CHECK (length(catalogue_id) BETWEEN 5 AND 80),
+  name text NOT NULL CHECK (length(name) BETWEEN 3 AND 100),
+  category_hint text NOT NULL DEFAULT '' CHECK(length(category_hint)<=90),
+  suggestion text NOT NULL DEFAULT '' CHECK(length(suggestion)<=320),
+  aliases jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(aliases)='array'),
+  status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','promoted','dismissed')),
+  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  updated_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+ALTER TABLE food_candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE food_candidates FORCE ROW LEVEL SECURITY;
+REVOKE ALL ON food_candidates FROM PUBLIC,menuminute_app,menuminute_worker;
+CREATE POLICY food_owner_only ON food_candidates FOR ALL TO menuminute_owner USING(true) WITH CHECK(true);
+
+CREATE FUNCTION app_private.food_editorial_candidates(p_limit integer)
+RETURNS TABLE(candidate jsonb) LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $candidates$
+BEGIN
+ IF NOT app_private.is_super_admin(NULLIF(current_setting('app.actor_id',true),''))
+ THEN RAISE EXCEPTION 'Unauthorized catalogue queue' USING ERRCODE='42501'; END IF;
+ RETURN QUERY SELECT jsonb_build_object(
+   'id',c.catalogue_id,'name',c.name,'hint',c.category_hint,
+   'suggestion',c.suggestion,'aliases',c.aliases,'status',c.status
+   ) FROM food_candidates c ORDER BY c.name,c.catalogue_id
+   LIMIT GREATEST(1,LEAST(coalesce(p_limit,250),300));
+END;
+$candidates$;
+REVOKE ALL ON FUNCTION app_private.food_editorial_candidates(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_editorial_candidates(integer) TO menuminute_app;
+
+CREATE FUNCTION app_private.food_import_candidates(p_candidates jsonb,p_key text)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $import$
+DECLARE actor text:=nullif(current_setting('app.actor_id',true),'');
+ existing admin_command_receipts%ROWTYPE;
+ item jsonb;
+ added integer:=0;
+ result jsonb;
+BEGIN
+ IF actor IS NULL OR NOT app_private.is_super_admin(actor)
+   OR p_key IS NULL OR p_key !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+   OR jsonb_typeof(p_candidates)<>'array' OR jsonb_array_length(p_candidates)>250
+ THEN RAISE EXCEPTION 'Invalid candidate import authorization' USING ERRCODE='42501'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(actor||':'||p_key,0));
+ SELECT * INTO existing FROM admin_command_receipts WHERE actor_id=actor AND request_key=p_key;
+ IF FOUND THEN
+   IF existing.action<>'food.candidates.import' OR existing.payload<>jsonb_build_object('candidates',p_candidates)
+   THEN RAISE EXCEPTION 'Candidate import key conflict' USING ERRCODE='23505'; END IF;
+   RETURN existing.result;
+ END IF;
+ IF NOT app_private.require_step_up() THEN
+   RAISE EXCEPTION 'Verify a recent privileged step-up' USING ERRCODE='42501'; END IF;
+ FOR item IN SELECT value FROM jsonb_array_elements(p_candidates)
+ LOOP
+  IF jsonb_typeof(item)<>'object' OR
+    length(coalesce(item->>'id','')) NOT BETWEEN 5 AND 80 OR
+    length(coalesce(item->>'name','')) NOT BETWEEN 3 AND 100 OR
+    length(coalesce(item->>'hint',''))>90 OR
+    length(coalesce(item->>'suggestion',''))>320 OR
+    jsonb_typeof(item->'aliases')<>'array' OR
+    jsonb_array_length(item->'aliases')>20
+  THEN RAISE EXCEPTION 'Invalid catalogue candidate' USING ERRCODE='22023'; END IF;
+  INSERT INTO food_candidates(catalogue_id,name,category_hint,suggestion,aliases)
+   VALUES(item->>'id',item->>'name',coalesce(item->>'hint',''),
+     coalesce(item->>'suggestion',''),item->'aliases')
+   ON CONFLICT(catalogue_id) DO NOTHING;
+  IF FOUND THEN added:=added+1; END IF;
+ END LOOP;
+ result:=jsonb_build_object('imported',added,'total',jsonb_array_length(p_candidates));
+ INSERT INTO admin_audit_logs(id,actor_id,actor_email,action,target_type,target_id,details)
+ VALUES(gen_random_uuid()::text,actor,(SELECT email FROM users WHERE id=actor),
+    'food.candidates.import','food_catalogue','candidate-batch',result);
+ INSERT INTO admin_command_receipts(actor_id,request_key,action,target_id,payload,result)
+ VALUES(actor,p_key,'food.candidates.import','candidate-batch',
+    jsonb_build_object('candidates',p_candidates),result);
+ RETURN result;
+END;
+$import$;
+REVOKE ALL ON FUNCTION app_private.food_import_candidates(jsonb,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_import_candidates(jsonb,text) TO menuminute_app;

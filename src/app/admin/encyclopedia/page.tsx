@@ -21,6 +21,7 @@ export default async function EditorialDashboard({searchParams}:{searchParams:Pr
          Research, review and publish immutable food guides. No recipe or AI suggestion is automatically indexable.
        </p>
      </div>
+     <Link href="/admin/encyclopedia/import" className="rounded-xl border border-stone-300 px-4 py-3 text-sm font-semibold dark:border-stone-700">Catalogue queue</Link>
      <Link href="/admin/encyclopedia/new" className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"><Plus size={18}/>New guide</Link>
    </header>
    <div className="grid gap-3 sm:grid-cols-3">
