@@ -7,7 +7,7 @@ import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 
 /** Per-outlet UPI payee used to print a pre-filled "Scan & Pay" QR on unpaid INR receipts.
  * MenuMinute only prints a link the merchant's own UPI ID accepts: no provider call, no payment
- * confirmation. Authorization is enforced in the database functions (migration 0114).
+ * confirmation. Authorization is enforced in the database functions (migration 0115).
  */
 const profileSchema = z.object({
   configured: z.boolean(),

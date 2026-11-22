@@ -1,4 +1,4 @@
--- 0114: Per-outlet UPI payee profile used to print a pre-filled "Scan & Pay" QR on unpaid INR receipts.
+-- 0115: Per-outlet UPI payee profile used to print a pre-filled "Scan & Pay" QR on unpaid INR receipts.
 -- MenuMinute only prints a link the merchant's own UPI ID accepts: no payment-provider call, no money
 -- movement and no payment confirmation. Additive and inert until a merchant saves a profile; existing
 -- receipts, orders and sales are unchanged. Available on every plan (no entitlement check).

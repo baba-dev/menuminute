@@ -73,7 +73,7 @@ no money movement, no webhook, no confirmation, and no change to how payments ar
 
 ### 1. Data
 
-New table `app_private.outlet_receipt_payment_profiles` (migration `0114`, forward-only, additive; the
+New table `app_private.outlet_receipt_payment_profiles` (migration `0115`, forward-only, additive; the
 feature is inert until a merchant saves a profile):
 
 - `outlet_id` primary key, `organization_id`, composite FK to `restaurants(organization_id,id)`
@@ -175,7 +175,7 @@ assumptions already in `thermalColumns`).
 4. Built-in pixel font for the text, rather than canvas or server fonts.
 5. INR only.
 6. Settings writes need `outlet.manage` (owner and manager), same as tax settings.
-7. New migration `0114`; settings table lives in `app_private`; its history keeps only a masked UPI
+7. New migration `0115` (0114 was taken by the Tiffin foundation on main); settings table lives in `app_private`; its history keeps only a masked UPI
    hint, never the full ID.
 8. After a split or partial tender the QR still asks for the full total (known limitation, owner to
    decide; only matters where POS finance tenders are enabled).

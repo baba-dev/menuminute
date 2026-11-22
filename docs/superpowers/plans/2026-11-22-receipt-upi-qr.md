@@ -6,7 +6,7 @@
 
 **Architecture:** A pure shared library (UPI link builder, 1-bit bitmap renderer with a built-in pixel font) feeds `encodeThermalReceipt`, so the browser Bluetooth path, the Android bridge and the on-screen preview emit identical output. A small `app_private` profile table with `SECURITY DEFINER` read/save functions (mirroring the sales-tax pattern) stores the UPI ID. `buildThermalReceipt` decides whether a block prints.
 
-**Tech Stack:** TypeScript, Vitest, PostgreSQL + Drizzle/pg (forward-only SQL migration `0114`), Next.js route handlers, the installed `qrcode` package (matrix only), dev-only `jsqr` for decode tests.
+**Tech Stack:** TypeScript, Vitest, PostgreSQL + Drizzle/pg (forward-only SQL migration `0115`), Next.js route handlers, the installed `qrcode` package (matrix only), dev-only `jsqr` for decode tests.
 
 **Spec:** `docs/superpowers/specs/2026-11-21-receipt-upi-qr-design.md` (approved by the owner on 2026-11-22). Read it and `AGENTS.md` first; this repo's Next.js has breaking changes, so read `node_modules/next/dist/docs/` before writing route code.
 
@@ -41,7 +41,7 @@ Failure modes the spec implies but no single task would otherwise pin; each has 
 - Create `src/lib/pos/pay-block-font.ts`: 5x7 ASCII pixel font data and glyph lookup (pure).
 - Create `src/lib/pos/pay-block.ts`: `renderPayBlock`, `payBlockToEscPos`, `payBlockToRgba` (pure).
 - Modify `src/lib/pos/thermal-receipt.ts`: optional `payBlock` field and embedding in `encodeThermalReceipt`.
-- Create `src/db/migrations/0114_receipt_upi_payment.sql` and append journal entry in `src/db/migrations/meta/_journal.json`.
+- Create `src/db/migrations/0115_receipt_upi_payment.sql` and append journal entry in `src/db/migrations/meta/_journal.json`.
 - Create `src/modules/receipt-payment/service.ts`: schema, read/save.
 - Create `src/app/api/organizations/[organizationId]/outlets/[outletId]/receipt-payment/route.ts`.
 - Modify `src/modules/pos/thermal-view.ts`, `src/modules/pos/native-print.ts`, `src/app/(dashboard)/dashboard/pos/receipts/[saleId]/page.tsx`, `receipt.css`.
@@ -137,8 +137,8 @@ Failure modes the spec implies but no single task would otherwise pin; each has 
 
 **Files:**
 
-- Create: `src/db/migrations/0114_receipt_upi_payment.sql`
-- Modify: `src/db/migrations/meta/_journal.json` (append idx 113, tag `0114_receipt_upi_payment`, `when` 1797080400046)
+- Create: `src/db/migrations/0115_receipt_upi_payment.sql`
+- Modify: `src/db/migrations/meta/_journal.json` (append idx 114, tag `0115_receipt_upi_payment`, `when` 1797166800046)
 - Create: `src/modules/receipt-payment/service.ts`, `src/app/api/organizations/[organizationId]/outlets/[outletId]/receipt-payment/route.ts`
 - Test: `tests/receipt-payment.integration.test.ts`, `tests/receipt-payment-schema.test.ts`
 

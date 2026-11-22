@@ -18,6 +18,8 @@ import type { WizardDraft } from "../wizard-types";
 
 interface StepIdentityProps {
   draft: WizardDraft;
+  /** Server-computed TIFFIN_ENABLED result; the type is hidden unless true. */
+  tiffinOffered?: boolean;
   onChange: <K extends keyof WizardDraft>(key: K, value: WizardDraft[K]) => void;
 }
 
@@ -66,6 +68,16 @@ const OUTLET_TYPES = [
   },
 ];
 
+// Reuses the cloud-kitchen icon asset; no tiffin-specific art exists yet.
+const TIFFIN_TYPE = {
+  id: "tiffin" as const,
+  name: "Tiffin / Home chef",
+  desc: "Daily lunch and dinner meal boxes for subscribers, collected by pickup.",
+  icon: Flame,
+  iconAsset: "cloud-kitchen",
+  defaultFulfillment: ["pickup" as const],
+};
+
 const PRESET_PALETTES = [
   { name: "Warm Amber", primary: "#f97316", secondary: "#1c1917" },
   { name: "Emerald Hearth", primary: "#10b981", secondary: "#064e3b" },
@@ -96,7 +108,7 @@ function moveRadio(event: KeyboardEvent<HTMLDivElement>) {
   radios[target]?.focus();
   radios[target]?.click();
 }
-export function StepIdentity({ draft, onChange }: StepIdentityProps) {
+export function StepIdentity({ draft, onChange, tiffinOffered = false }: StepIdentityProps) {
   return (
     <div className="wizard-content">
       <div className="wizard-header">
@@ -190,7 +202,7 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
           aria-label="Outlet Type"
           onKeyDown={moveRadio}
         >
-          {OUTLET_TYPES.map((type) => {
+          {(tiffinOffered ? [...OUTLET_TYPES, TIFFIN_TYPE] : OUTLET_TYPES).map((type) => {
             const isSelected = draft.outletType === type.id;
             const Icon = type.icon;
             return (
@@ -217,7 +229,7 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
                 <div className="wizard-type-icon">
                   <Icon size={18} className="wizard-type-fallback" />
                   <Image
-                    src={`/brand/onboarding-wizard/icons/outlet-type-${type.id.replaceAll("_", "-")}.svg`}
+                    src={`/brand/onboarding-wizard/icons/outlet-type-${"iconAsset" in type ? type.iconAsset : type.id.replaceAll("_", "-")}.svg`}
                     alt=""
                     width={35}
                     height={35}

@@ -38,32 +38,32 @@ An inspection of the schema (`src/db/schema/*`), migrations, and security proced
 
 ### 3. Shop / Outlet Settings (`restaurants`, `menus`, `qr_codes`)
 
-| Field                  | Type                | Current DB Support                     | Wizard Role / Enhancement                                                                                    |
-| :--------------------- | :------------------ | :------------------------------------- | :----------------------------------------------------------------------------------------------------------- |
-| `name`                 | text (2–100 chars)  | Exists                                 | **Required**: Outlet public name (e.g., "Bella Napoli - Downtown").                                          |
-| `outletType`           | enum                | Exists                                 | **Required**: `restaurant`, `cafe`, `takeout`, `cloud_kitchen`, `hotel`, `mixed`. Sets default fulfillments. |
-| `description`          | text (max 500)      | Exists                                 | Guest-facing bio, specialties, or story.                                                                     |
-| `country`              | text (2-letter ISO) | Exists                                 | **Required**: e.g., `IN`, `OM`, `US`, `AE`, `GB`. Drives default currency & tax.                             |
-| `currency`             | text (ISO 4217)     | Exists                                 | **Required**: Transaction currency (`INR`, `USD`, `EUR`, `OMR`, `AED`, etc.).                                |
-| `timezone`             | text (IANA)         | Exists                                 | **Required**: IANA timezone (e.g., `Asia/Kolkata`, `Asia/Dubai`) for service session expiries.               |
-| `fulfillmentModes`     | text[]              | Exists                                 | **Required**: `dine_in`, `pickup` (one or both required).                                                    |
-| `addressLine1`         | text (max 180)      | Exists in schema, missing in provision | Street address and building name.                                                                            |
-| `addressLine2`         | text (max 180)      | Exists in schema, missing in provision | Suite, floor, or landmark.                                                                                   |
-| `city`                 | text (max 100)      | Exists in schema                       | City / metropolitan area.                                                                                    |
-| `state`                | text (max 100)      | Exists in schema, missing in provision | State, region, or province.                                                                                  |
-| `postalCode`           | text (max 24)       | Exists in schema, missing in provision | ZIP or postal code.                                                                                          |
-| **`latitude`**         | `numeric(10, 7)`    | **MISSING — TO BE ADDED**              | GPS latitude coordinate (-90.0 to +90.0, 7 decimal places).                                                  |
-| **`longitude`**        | `numeric(10, 7)`    | **MISSING — TO BE ADDED**              | GPS longitude coordinate (-180.0 to +180.0, 7 decimal places).                                               |
-| `phone`                | text (max 40)       | Exists in schema, missing in provision | Guest phone / WhatsApp order contact.                                                                        |
-| `email`                | text (max 254)      | Exists in schema, missing in provision | Public outlet inquiries email.                                                                               |
-| `website`              | text (max 512)      | Exists in schema, missing in provision | Public website / social link (Instagram, Linktree).                                                          |
-| `primaryColor`         | text (hex #RRGGBB)  | Exists in schema (default `#f97316`)   | Brand accent color for QR menus and badges.                                                                  |
-| `secondaryColor`       | text (hex #RRGGBB)  | Exists in schema (default `#1c1917`)   | Brand surface / contrast color.                                                                              |
-| `pickupLeadMinutes`    | integer (0–240)     | Exists (default 15)                    | Default prep time buffer for pickup orders.                                                                  |
-| `pickupSlotMinutes`    | integer (5–120)     | Exists (default 15)                    | Scheduling increment.                                                                                        |
-| `pickupAdvanceDays`    | integer (1–30)      | Exists (default 7)                     | Maximum advance ordering horizon.                                                                            |
-| `menuSchedule`         | jsonb               | Exists                                 | Weekly opening / closing operating hours.                                                                    |
-| Initial Service Tables | integer count       | Exists via `restaurant_tables`         | Provision initial Dine-In tables (e.g. Tables 1–10).                                                         |
+| Field                  | Type                | Current DB Support                     | Wizard Role / Enhancement                                                                                                                           |
+| :--------------------- | :------------------ | :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                 | text (2–100 chars)  | Exists                                 | **Required**: Outlet public name (e.g., "Bella Napoli - Downtown").                                                                                 |
+| `outletType`           | enum                | Exists                                 | **Required**: `restaurant`, `cafe`, `takeout`, `cloud_kitchen`, `hotel`, `mixed`, `tiffin` (only when `TIFFIN_ENABLED`). Sets default fulfillments. |
+| `description`          | text (max 500)      | Exists                                 | Guest-facing bio, specialties, or story.                                                                                                            |
+| `country`              | text (2-letter ISO) | Exists                                 | **Required**: e.g., `IN`, `OM`, `US`, `AE`, `GB`. Drives default currency & tax.                                                                    |
+| `currency`             | text (ISO 4217)     | Exists                                 | **Required**: Transaction currency (`INR`, `USD`, `EUR`, `OMR`, `AED`, etc.).                                                                       |
+| `timezone`             | text (IANA)         | Exists                                 | **Required**: IANA timezone (e.g., `Asia/Kolkata`, `Asia/Dubai`) for service session expiries.                                                      |
+| `fulfillmentModes`     | text[]              | Exists                                 | **Required**: `dine_in`, `pickup` (one or both required).                                                                                           |
+| `addressLine1`         | text (max 180)      | Exists in schema, missing in provision | Street address and building name.                                                                                                                   |
+| `addressLine2`         | text (max 180)      | Exists in schema, missing in provision | Suite, floor, or landmark.                                                                                                                          |
+| `city`                 | text (max 100)      | Exists in schema                       | City / metropolitan area.                                                                                                                           |
+| `state`                | text (max 100)      | Exists in schema, missing in provision | State, region, or province.                                                                                                                         |
+| `postalCode`           | text (max 24)       | Exists in schema, missing in provision | ZIP or postal code.                                                                                                                                 |
+| **`latitude`**         | `numeric(10, 7)`    | **MISSING — TO BE ADDED**              | GPS latitude coordinate (-90.0 to +90.0, 7 decimal places).                                                                                         |
+| **`longitude`**        | `numeric(10, 7)`    | **MISSING — TO BE ADDED**              | GPS longitude coordinate (-180.0 to +180.0, 7 decimal places).                                                                                      |
+| `phone`                | text (max 40)       | Exists in schema, missing in provision | Guest phone / WhatsApp order contact.                                                                                                               |
+| `email`                | text (max 254)      | Exists in schema, missing in provision | Public outlet inquiries email.                                                                                                                      |
+| `website`              | text (max 512)      | Exists in schema, missing in provision | Public website / social link (Instagram, Linktree).                                                                                                 |
+| `primaryColor`         | text (hex #RRGGBB)  | Exists in schema (default `#f97316`)   | Brand accent color for QR menus and badges.                                                                                                         |
+| `secondaryColor`       | text (hex #RRGGBB)  | Exists in schema (default `#1c1917`)   | Brand surface / contrast color.                                                                                                                     |
+| `pickupLeadMinutes`    | integer (0–240)     | Exists (default 15)                    | Default prep time buffer for pickup orders.                                                                                                         |
+| `pickupSlotMinutes`    | integer (5–120)     | Exists (default 15)                    | Scheduling increment.                                                                                                                               |
+| `pickupAdvanceDays`    | integer (1–30)      | Exists (default 7)                     | Maximum advance ordering horizon.                                                                                                                   |
+| `menuSchedule`         | jsonb               | Exists                                 | Weekly opening / closing operating hours.                                                                                                           |
+| Initial Service Tables | integer count       | Exists via `restaurant_tables`         | Provision initial Dine-In tables (e.g. Tables 1–10).                                                                                                |
 
 ---
 

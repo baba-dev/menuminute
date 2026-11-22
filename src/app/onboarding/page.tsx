@@ -4,6 +4,7 @@ import { listOrganizations } from "@/modules/organizations/service";
 import { SessionContinuity } from "@/components/auth/session-continuity";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "./setup-form";
+import { tiffinTypeOffered } from "@/modules/restaurants/service";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
 import { ThemedArtwork } from "@/components/onboarding/themed-artwork";
@@ -52,6 +53,7 @@ export default async function OnboardingPage({
       <OnboardingForm
         initialQuick={quick === "1"}
         prefill={{ name: session.user.name, email: session.user.email }}
+        tiffinOffered={tiffinTypeOffered()}
       />
     </AuthShell>
   );
