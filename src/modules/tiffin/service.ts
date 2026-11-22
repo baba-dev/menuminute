@@ -86,7 +86,8 @@ export type PublicSlot = {
   open: boolean;
   /** True when a date override closed this slot for the day. */
   closed: boolean;
-  combos: PublicCombo[];
+  /** Ordered ids of the combos offered; resolve them through PublicWeek.combos. */
+  comboIds: string[];
 };
 /** Disabled (or unconfigured) slots are absent from `slots`. */
 export type PublicDay = {
@@ -94,9 +95,14 @@ export type PublicDay = {
   weekday: number;
   slots: Partial<Record<SlotKind, PublicSlot>>;
 };
+/**
+ * Each combo offered anywhere in `days` appears once in `combos` (keyed by id); slots carry only ids,
+ * so the payload is bounded by the outlet's combos however many days are requested.
+ */
 export type PublicWeek = {
   outlet: { id: string; name: string; currency: string; timezone: string };
   today: string;
+  combos: Record<string, PublicCombo>;
   days: PublicDay[];
 };
 

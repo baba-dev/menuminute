@@ -243,14 +243,29 @@ describe("public tiffin routes", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     const body = await res.json();
     expect(body.days).toHaveLength(7);
-    expect(body.days[0].slots.lunch.combos[0].priceMinor).toBe("12000");
+    const firstId = body.days[0].slots.lunch.comboIds[0] as string;
+    expect(body.combos[firstId].priceMinor).toBe("12000");
+    expect(body.days[0].slots.lunch).not.toHaveProperty("combos");
     expect(JSON.stringify(body)).not.toContain("organization");
 
     const from = body.days[0].localDate as string;
     const two = await weekGET(week(o.token, `?from=${from}&days=2`), ctx("publicMenuId", o.token));
     expect((await two.json()).days).toHaveLength(2);
+    const seven = await weekGET(
+      week(o.token, `?from=${from}&days=7`),
+      ctx("publicMenuId", o.token)
+    );
+    expect((await seven.json()).days).toHaveLength(7);
 
-    for (const qs of ["?days=0", "?days=15", "?days=abc", "?from=2026-02-30", "?from=x"]) {
+    for (const qs of [
+      "?days=0",
+      "?days=8",
+      "?days=14",
+      "?days=15",
+      "?days=abc",
+      "?from=2026-02-30",
+      "?from=x",
+    ]) {
       const bad = await weekGET(week(o.token, qs), ctx("publicMenuId", o.token));
       expect(bad.status, qs).toBe(422);
       expect(bad.headers.get("cache-control")).toBe("no-store");

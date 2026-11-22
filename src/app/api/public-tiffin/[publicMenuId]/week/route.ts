@@ -28,7 +28,8 @@ const querySchema = z.object({
     .string()
     .regex(/^\d{1,2}$/)
     .transform(Number)
-    .pipe(z.number().int().min(1).max(14))
+    // The public route serves at most 7 days per request (the SQL function accepts 1-14).
+    .pipe(z.number().int().min(1).max(7))
     .optional(),
 });
 const noStore = { "cache-control": "no-store" };

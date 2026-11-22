@@ -143,8 +143,10 @@ async function seeded(timezone = "Asia/Kolkata") {
   return { ...o, thali: t, snack: s, today };
 }
 
-const lunchNames = (week: PublicWeek | null, i: number) =>
-  week!.days[i]!.slots.lunch!.combos.map((c) => c.name);
+/** Resolves a slot-day's ordered comboIds through the week's combo map. */
+const slotCombos = (week: PublicWeek | null, i: number, kind: "lunch" | "dinner" = "lunch") =>
+  week!.days[i]!.slots[kind]!.comboIds.map((id) => week!.combos[id]!);
+const lunchNames = (week: PublicWeek | null, i: number) => slotCombos(week, i).map((c) => c.name);
 
 function keysDeep(value: unknown, out = new Set<string>()): Set<string> {
   if (Array.isArray(value)) value.forEach((v) => keysDeep(v, out));
@@ -195,9 +197,12 @@ describe("tiffin public week", () => {
         closed: false,
       });
       // Dinner is enabled but has no menu.
-      expect(day.slots.dinner).toMatchObject({ open: false, closed: false, combos: [] });
+      expect(day.slots.dinner).toMatchObject({ open: false, closed: false, comboIds: [] });
+      expect(day.slots.lunch!.comboIds).toEqual([o.snack.id, o.thali.id]);
+      expect(day.slots.lunch).not.toHaveProperty("combos");
     });
-    expect(week!.days[0]!.slots.lunch!.combos[1]).toEqual({
+    expect(Object.keys(week!.combos).sort()).toEqual([o.snack.id, o.thali.id].sort());
+    expect(week!.combos[o.thali.id]).toEqual({
       id: o.thali.id,
       name: "Veg Thali",
       description: "Dal, sabzi, rice",
@@ -248,10 +253,14 @@ describe("tiffin public week", () => {
     });
     const week = await publicWeek(o.token, o.today, 5);
     expect(lunchNames(week, 0)).toEqual(["Snack Box", "Veg Thali"]);
-    expect(week!.days[1]!.slots.lunch).toMatchObject({ closed: true, open: false, combos: [] });
+    expect(week!.days[1]!.slots.lunch).toMatchObject({ closed: true, open: false, comboIds: [] });
     expect(lunchNames(week, 2)).toEqual(["Rajma Rice"]);
     expect(week!.days[2]!.slots.lunch).toMatchObject({ closed: false, open: true });
-    expect(week!.days[3]!.slots.lunch).toMatchObject({ closed: false, open: false, combos: [] });
+    expect(week!.days[3]!.slots.lunch).toMatchObject({
+      closed: false,
+      open: false,
+      comboIds: [],
+    });
     expect(lunchNames(week, 4)).toEqual(["Snack Box", "Veg Thali"]);
 
     // Clearing the override restores the weekday menu.
@@ -273,7 +282,9 @@ describe("tiffin public week", () => {
       weekday: dow(o.today),
       comboIds: [o.snack.id],
     });
-    expect((await publicWeek(o.token, o.today, 1))!.days[0]!.slots.dinner!.combos).toHaveLength(1);
+    expect((await publicWeek(o.token, o.today, 1))!.days[0]!.slots.dinner!.comboIds).toEqual([
+      o.snack.id,
+    ]);
     await setComboArchived(o.actor, o.outletId, { id: o.thali.id, archived: true });
     await saveSlot(o.actor, o.outletId, slot("dinner", { enabled: false }));
     const week = await publicWeek(o.token, o.today, 7);
@@ -283,6 +294,7 @@ describe("tiffin public week", () => {
       expect(Object.keys(week!.days[i]!.slots)).toEqual(["lunch"]);
     }
     expect(JSON.stringify(week)).not.toContain(o.thali.id);
+    expect(Object.keys(week!.combos)).toEqual([o.snack.id]);
   });
 
   it("never shows another outlet's combos", async () => {
@@ -301,6 +313,71 @@ describe("tiffin public week", () => {
     expect(text).not.toContain(b.outletId);
     expect(lunchNames(await publicWeek(b.token, a.today, 1), 0)).toEqual(["Other Kitchen Secret"]);
   });
+
+  it("embeds each combo once: a maximal week stays bounded and slots carry only ordered ids", async () => {
+    const o = await tiffinOutlet();
+    await saveSlot(o.actor, o.outletId, slot("lunch"));
+    await saveSlot(o.actor, o.outletId, slot("dinner"));
+    // Maximal ASCII combos: 300-char description, 20 items and 20 add-ons with 80-char labels.
+    const big = (tag: string, n: number) => ({
+      name: `${tag} combo ${n} `.padEnd(80, "n"),
+      description: `${tag}-description-${n}-`.padEnd(300, "d"),
+      priceMinor: 2147483647,
+      items: Array.from({ length: 20 }, (_, i) => ({
+        label: `item ${i} `.padEnd(80, "i"),
+        quantity: 99,
+      })),
+      addons: Array.from({ length: 20 }, (_, i) => ({
+        label: `addon ${i} `.padEnd(80, "a"),
+        priceMinor: 2147483647,
+      })),
+    });
+    const lunchIds: string[] = [];
+    const dinnerIds: string[] = [];
+    for (let n = 0; n < 50; n++) {
+      lunchIds.push((await save(o, big("L", n))).id);
+      dinnerIds.push((await save(o, big("D", n))).id);
+    }
+    const dinnerOrder = [...dinnerIds].reverse();
+    for (let weekday = 0; weekday < 7; weekday++) {
+      await setWeekMenu(o.actor, o.outletId, { slotKind: "lunch", weekday, comboIds: lunchIds });
+      await setWeekMenu(o.actor, o.outletId, {
+        slotKind: "dinner",
+        weekday,
+        comboIds: dinnerOrder,
+      });
+    }
+    const archivedId = lunchIds[0]!;
+    await setComboArchived(o.actor, o.outletId, { id: archivedId, archived: true });
+    const expectedLunch = lunchIds.slice(1);
+
+    const week = await publicWeek(o.token, await localToday(o.timezone), 7);
+    const text = JSON.stringify(week);
+    expect(Buffer.byteLength(text, "utf8")).toBeLessThan(1.5 * 1024 * 1024);
+    expect(Object.keys(week!.combos).sort()).toEqual([...expectedLunch, ...dinnerIds].sort());
+    expect(text).not.toContain(archivedId);
+    for (const [id, combo] of Object.entries(week!.combos)) {
+      expect(combo.id).toBe(id);
+      // Each combo body (its unique description) is embedded exactly once.
+      expect(text.split(combo.description).length - 1).toBe(1);
+    }
+    expect(week!.days).toHaveLength(7);
+    for (const day of week!.days) {
+      expect(day.slots.lunch!.comboIds).toEqual(expectedLunch);
+      expect(day.slots.dinner!.comboIds).toEqual(dinnerOrder);
+      for (const s of [day.slots.lunch!, day.slots.dinner!]) {
+        expect(Object.keys(s).sort()).toEqual([
+          "closed",
+          "comboIds",
+          "endMinute",
+          "kind",
+          "open",
+          "startMinute",
+        ]);
+        expect(s.comboIds.every((id) => typeof id === "string")).toBe(true);
+      }
+    }
+  }, 120_000);
 
   it.each([
     ["revoked QR", "update qr_codes set is_active=false where destination_token=$1", true],
@@ -365,7 +442,8 @@ describe("tiffin public week — outlet-local dates", () => {
         "select app_private.tiffin_public_week_at($1,null,1,$2::timestamptz) as r",
         [token, instant]
       );
-      return r.rows[0]!.r!.days[0]!;
+      const week = r.rows[0]!.r!;
+      return { ...week.days[0]!, names: lunchNames(week, 0) };
     });
   }
   async function perWeekday(timezone: string) {
@@ -377,8 +455,7 @@ describe("tiffin public week — outlet-local dates", () => {
     }
     return o;
   }
-  const named = (day: Awaited<ReturnType<typeof firstDayAt>>) =>
-    day.slots.lunch!.combos.map((c) => c.name);
+  const named = (day: Awaited<ReturnType<typeof firstDayAt>>) => day.names;
 
   it("Europe/London across the 2026-03-29 DST change", async () => {
     const o = await perWeekday("Europe/London");

@@ -76,7 +76,20 @@ function Combo({ combo, currency }: { combo: PublicCombo; currency: string }) {
   );
 }
 
-function Meal({ slot, currency }: { slot: PublicSlot; currency: string }) {
+function Meal({
+  slot,
+  combos: comboMap,
+  currency,
+}: {
+  slot: PublicSlot;
+  combos: PublicWeekData["combos"];
+  currency: string;
+}) {
+  // Ids resolve through the week's combo map; an id missing from the map is skipped.
+  const combos = slot.comboIds.flatMap((id) => {
+    const combo = Object.hasOwn(comboMap, id) ? comboMap[id] : undefined;
+    return combo ? [combo] : [];
+  });
   return (
     <section className="tiffin-public-meal">
       <h3>
@@ -87,11 +100,11 @@ function Meal({ slot, currency }: { slot: PublicSlot; currency: string }) {
       </h3>
       {slot.closed ? (
         <p className="tiffin-public-state">Closed</p>
-      ) : slot.combos.length === 0 ? (
+      ) : combos.length === 0 ? (
         <p className="tiffin-public-state">Nothing planned yet</p>
       ) : (
         <ul className="tiffin-public-combos">
-          {slot.combos.map((c) => (
+          {combos.map((c) => (
             <Combo key={c.id} combo={c} currency={currency} />
           ))}
         </ul>
@@ -116,7 +129,9 @@ export function PublicWeek({ week }: { week: PublicWeekData }) {
             {slots.length === 0 ? (
               <p className="tiffin-public-state">Closed</p>
             ) : (
-              slots.map((s) => <Meal key={s.kind} slot={s} currency={currency} />)
+              slots.map((s) => (
+                <Meal key={s.kind} slot={s} combos={week.combos} currency={currency} />
+              ))
             )}
           </section>
         );

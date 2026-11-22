@@ -26,6 +26,7 @@ const snack = { ...thali, id: "c2", name: "Snack box", description: "", addons: 
 const week = (over: Partial<Week["outlet"]> = {}): Week => ({
   outlet: { id: "o", name: "Asha's Kitchen", currency: "INR", timezone: "Asia/Kolkata", ...over },
   today: "2026-11-22",
+  combos: { c1: thali, c2: snack },
   days: [
     {
       localDate: "2026-11-22",
@@ -37,7 +38,7 @@ const week = (over: Partial<Week["outlet"]> = {}): Week => ({
           endMinute: 870,
           open: true,
           closed: false,
-          combos: [thali, snack],
+          comboIds: ["c1", "missing", "c2"],
         },
         dinner: {
           kind: "dinner",
@@ -45,7 +46,7 @@ const week = (over: Partial<Week["outlet"]> = {}): Week => ({
           endMinute: 1440,
           open: false,
           closed: true,
-          combos: [],
+          comboIds: [],
         },
       },
     },
@@ -59,7 +60,7 @@ const week = (over: Partial<Week["outlet"]> = {}): Week => ({
           endMinute: 870,
           open: false,
           closed: false,
-          combos: [],
+          comboIds: [],
         },
       },
     },
@@ -131,9 +132,28 @@ describe("PublicWeek", () => {
 
   it("escapes hostile owner text", () => {
     const w = week();
-    w.days[0]!.slots.lunch!.combos[0]!.name = "<script>alert(1)</script>";
+    w.combos["c1"] = { ...thali, name: "<script>alert(1)</script>" };
     const { container } = render(<PublicWeek week={w} />);
     expect(container.querySelector("script")).toBeNull();
     expect(container.textContent).toContain("<script>alert(1)</script>");
+  });
+
+  it("resolves comboIds through the combo map in order and skips unknown ids", () => {
+    const { container } = render(<PublicWeek week={week()} />);
+    const lunch = screen.getAllByRole("heading", { level: 3 })[0]!.parentElement!;
+    const names = [...lunch.querySelectorAll(".tiffin-public-combo-name")].map(
+      (n) => n.textContent
+    );
+    expect(names).toEqual(["Home thali", "Snack box"]);
+    expect(container.textContent).not.toContain("missing");
+  });
+
+  it("shows Nothing planned yet when every id is unknown", () => {
+    const w = week();
+    w.days[0]!.slots.lunch!.comboIds = ["gone"];
+    const { container } = render(<PublicWeek week={w} />);
+    const lunch = screen.getAllByRole("heading", { level: 3 })[0]!.parentElement!;
+    expect(lunch.textContent).toContain("Nothing planned yet");
+    expect(container.querySelectorAll(".tiffin-public-combo")).toHaveLength(0);
   });
 });

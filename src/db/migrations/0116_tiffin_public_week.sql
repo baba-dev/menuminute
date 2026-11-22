@@ -11,7 +11,11 @@
 -- slots are never offered. Every lookup is scoped by organization_id AND outlet_id. No locks, no
 -- dynamic SQL, no writes. Output never contains organization ids.
 -- tiffin_public_week(token, from, days): NULL unless days is 1..14 and every date is within outlet-local
--- today-1 .. today+366 (from defaults to today). tiffin_public_offer(token, date, slot): NULL only when
+-- today-1 .. today+366 (from defaults to today). Shape: {outlet, today, combos: {id: combo}, days: [{
+-- localDate, weekday, slots: {lunch?, dinner?: {kind, startMinute, endMinute, open, closed, comboIds}}}]};
+-- each combo offered in the returned days is embedded once in `combos` and slots carry ordered ids only,
+-- so the response is bounded by the outlet's combos however many days are requested (the public route
+-- further caps days at 7). tiffin_public_offer(token, date, slot): NULL only when
 -- the token does not resolve or an argument is malformed; for a resolved token it returns the outlet
 -- currency and the combos offered for that date and slot, with an empty list when the slot is disabled,
 -- closed, has no menu or the date is outside the window. Prices are emitted as decimal strings.
@@ -38,7 +42,8 @@ LANGUAGE sql STABLE SET search_path=pg_catalog,public,pg_temp AS $$
  FROM tiffin_combos c WHERE c.organization_id=p_org AND c.outlet_id=p_outlet AND c.id=p_combo AND NOT c.archived
 $$;
 
--- {closed, combos} for one slot and local date, applying the override-replaces-day rule.
+-- {closed, comboIds} for one slot and local date, applying the override-replaces-day rule. The ids are
+-- ordered (sort_order, combo_id) and never include an archived combo.
 CREATE FUNCTION app_private.tiffin_public_slot_day(p_org text,p_outlet text,p_slot text,p_date date) RETURNS jsonb
 LANGUAGE plpgsql STABLE SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE o tiffin_date_overrides%ROWTYPE; v jsonb;
@@ -46,27 +51,31 @@ BEGIN
  SELECT * INTO o FROM tiffin_date_overrides
  WHERE organization_id=p_org AND outlet_id=p_outlet AND slot_id=p_slot AND local_date=p_date;
  IF FOUND THEN
-  IF o.closed THEN RETURN jsonb_build_object('closed',true,'combos','[]'::jsonb); END IF;
-  SELECT jsonb_agg(app_private.tiffin_public_combo(p_org,p_outlet,c.id) ORDER BY x.sort_order,x.combo_id) INTO v
+  IF o.closed THEN RETURN jsonb_build_object('closed',true,'comboIds','[]'::jsonb); END IF;
+  SELECT jsonb_agg(c.id ORDER BY x.sort_order,x.combo_id) INTO v
   FROM tiffin_date_override_combos x
   JOIN tiffin_combos c ON c.organization_id=x.organization_id AND c.outlet_id=x.outlet_id AND c.id=x.combo_id AND NOT c.archived
   WHERE x.organization_id=p_org AND x.outlet_id=p_outlet AND x.override_id=o.id;
  ELSE
-  SELECT jsonb_agg(app_private.tiffin_public_combo(p_org,p_outlet,c.id) ORDER BY w.sort_order,w.combo_id) INTO v
+  SELECT jsonb_agg(c.id ORDER BY w.sort_order,w.combo_id) INTO v
   FROM tiffin_week_menus m
   JOIN tiffin_week_menu_combos w ON w.organization_id=m.organization_id AND w.outlet_id=m.outlet_id AND w.week_menu_id=m.id
   JOIN tiffin_combos c ON c.organization_id=w.organization_id AND c.outlet_id=w.outlet_id AND c.id=w.combo_id AND NOT c.archived
   WHERE m.organization_id=p_org AND m.outlet_id=p_outlet AND m.slot_id=p_slot
    AND m.weekday=EXTRACT(DOW FROM p_date)::integer;
  END IF;
- RETURN jsonb_build_object('closed',false,'combos',COALESCE(v,'[]'::jsonb));
+ RETURN jsonb_build_object('closed',false,'comboIds',COALESCE(v,'[]'::jsonb));
 END $$;
 
 -- ── Public week ────────────────────────────────────────────────────────────────────────────────────
+-- Each combo offered anywhere in the returned days is embedded once in the `combos` map (keyed by id);
+-- slots carry only ordered `comboIds`, so the response is bounded by the outlet's combos (<= 200 live)
+-- however many days are requested.
 CREATE FUNCTION app_private.tiffin_public_week_at(p_token text,p_from date,p_days integer,p_now timestamptz)
 RETURNS jsonb
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE r record; s record; v_today date; v_from date; d date; v_day jsonb; v_slots jsonb; v_days jsonb:='[]'::jsonb;
+ v_ids text[]:='{}'::text[]; v_combos jsonb;
 BEGIN
  IF p_token IS NULL OR length(p_token) NOT BETWEEN 1 AND 128 OR p_days IS NULL OR p_days NOT BETWEEN 1 AND 14
   OR p_now IS NULL THEN RETURN NULL; END IF;
@@ -84,15 +93,21 @@ BEGIN
   FOR s IN SELECT t.id,t.kind,t.start_minute,t.end_minute FROM tiffin_slots t
    WHERE t.organization_id=r.organization_id AND t.outlet_id=r.id AND t.enabled ORDER BY t.kind='dinner',t.id LOOP
    v_day:=app_private.tiffin_public_slot_day(r.organization_id,r.id,s.id,d);
+   v_ids:=v_ids||ARRAY(SELECT jsonb_array_elements_text(v_day->'comboIds'));
    v_slots:=v_slots||jsonb_build_object(s.kind,jsonb_build_object('kind',s.kind,'startMinute',s.start_minute,
     'endMinute',s.end_minute,'closed',v_day->'closed',
-    'open',NOT (v_day->>'closed')::boolean AND jsonb_array_length(v_day->'combos')>0,'combos',v_day->'combos'));
+    'open',NOT (v_day->>'closed')::boolean AND jsonb_array_length(v_day->'comboIds')>0,
+    'comboIds',v_day->'comboIds'));
   END LOOP;
   v_days:=v_days||jsonb_build_array(jsonb_build_object('localDate',d::text,'weekday',EXTRACT(DOW FROM d)::integer,
    'slots',v_slots));
  END LOOP;
+ SELECT COALESCE(jsonb_object_agg(u.id,u.combo),'{}'::jsonb) INTO v_combos
+ FROM (SELECT x.id,app_private.tiffin_public_combo(r.organization_id,r.id,x.id) AS combo
+   FROM (SELECT DISTINCT unnest(v_ids) AS id) x) u
+ WHERE u.combo IS NOT NULL;
  RETURN jsonb_build_object('outlet',jsonb_build_object('id',r.id,'name',r.name,'currency',r.currency,
-  'timezone',r.timezone),'today',v_today::text,'days',v_days);
+  'timezone',r.timezone),'today',v_today::text,'combos',v_combos,'days',v_days);
 END $$;
 
 CREATE FUNCTION app_private.tiffin_public_week(p_token text,p_from date,p_days integer) RETURNS jsonb
@@ -118,7 +133,11 @@ BEGIN
   SELECT t.id INTO v_slot FROM tiffin_slots t
   WHERE t.organization_id=r.organization_id AND t.outlet_id=r.id AND t.kind=p_slot AND t.enabled;
   IF v_slot IS NOT NULL THEN
-   v_combos:=app_private.tiffin_public_slot_day(r.organization_id,r.id,v_slot,p_date)->'combos';
+   SELECT COALESCE(jsonb_agg(u.combo ORDER BY u.o),'[]'::jsonb) INTO v_combos
+   FROM (SELECT e.o,app_private.tiffin_public_combo(r.organization_id,r.id,e.id) AS combo
+     FROM jsonb_array_elements_text(app_private.tiffin_public_slot_day(r.organization_id,r.id,v_slot,p_date)->'comboIds')
+      WITH ORDINALITY e(id,o)) u
+   WHERE u.combo IS NOT NULL;
   END IF;
  END IF;
  RETURN jsonb_build_object('outletId',r.id,'currency',r.currency,'localDate',p_date::text,'slotKind',p_slot,
