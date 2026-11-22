@@ -1,0 +1,390 @@
+/* Tiffin dashboard pages. Tokens follow the workspace; dark mode overrides mirror guests.css. */
+.tiffin-shell {
+  --tf-ink: var(--ink, #30251d);
+  --tf-line: #e6d9ce;
+  --tf-muted: #6b5b4f;
+  --tf-panel: #fffcf8;
+  --tf-soft: #f9f0e7;
+  --tf-accent: #9a3f12;
+  --tf-danger: #a12a1b;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 40px) 16px 64px;
+  color: var(--tf-ink);
+  font-family: var(--font-dm), sans-serif;
+}
+:root[data-theme="dark"] .tiffin-shell {
+  --tf-line: #504239;
+  --tf-muted: #c5b1a1;
+  --tf-panel: #2d2824;
+  --tf-soft: #362e28;
+  --tf-accent: #ffb36f;
+  --tf-danger: #ff9f90;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .tiffin-shell {
+    --tf-line: #504239;
+    --tf-muted: #c5b1a1;
+    --tf-panel: #2d2824;
+    --tf-soft: #362e28;
+    --tf-accent: #ffb36f;
+    --tf-danger: #ff9f90;
+  }
+}
+.tiffin-shell * {
+  box-sizing: border-box;
+}
+.tiffin-shell h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+}
+.tiffin-shell h2 {
+  margin: 24px 0 12px;
+  font-size: 1.15rem;
+}
+.tiffin-shell h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.tiffin-eyebrow {
+  color: var(--tf-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tiffin-muted,
+.tiffin-hint {
+  color: var(--tf-muted);
+  font-size: 0.92rem;
+}
+.tiffin-hint {
+  margin: 4px 0 0;
+}
+.tiffin-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.tiffin-cards {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 24px;
+}
+.tiffin-card {
+  display: block;
+  padding: 20px;
+  border: 1px solid var(--tf-line);
+  border-radius: 14px;
+  background: var(--tf-panel);
+  color: inherit;
+  text-decoration: none;
+}
+a.tiffin-card:hover {
+  border-color: var(--tf-accent);
+}
+.tiffin-card.is-disabled {
+  background: var(--tf-soft);
+  border-style: dashed;
+}
+.tiffin-card h2 {
+  margin: 0 0 6px;
+}
+.tiffin-card p {
+  margin: 0;
+  color: var(--tf-muted);
+}
+.tiffin-shell :is(a, button, input, textarea, summary):focus-visible {
+  outline: 3px solid var(--mm-focus, #d76b29);
+  outline-offset: 2px;
+}
+.tiffin-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-panel);
+  color: var(--tf-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tiffin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.tiffin-primary {
+  border-color: var(--tf-accent);
+  background: var(--tf-accent);
+  color: #fff;
+}
+:root[data-theme="dark"] .tiffin-primary {
+  color: #2a1608;
+}
+.tiffin-toolbar,
+.tiffin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.tiffin-form,
+.tiffin-empty,
+.tiffin-combo {
+  padding: 18px;
+  border: 1px solid var(--tf-line);
+  border-radius: 14px;
+  background: var(--tf-panel);
+}
+.tiffin-form {
+  margin-top: 16px;
+}
+.tiffin-form h2 {
+  margin-top: 0;
+}
+.tiffin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+.tiffin-field label,
+.tiffin-fieldset legend {
+  font-weight: 600;
+}
+.tiffin-field :is(input, textarea) {
+  min-height: 44px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-panel);
+  color: inherit;
+  font: inherit;
+}
+.tiffin-field [aria-invalid="true"] {
+  border-color: var(--tf-danger);
+  border-width: 2px;
+}
+.tiffin-fieldset {
+  margin: 20px 0 0;
+  padding: 0;
+  border: 0;
+}
+.tiffin-rows,
+.tiffin-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tiffin-rows {
+  margin-bottom: 12px;
+}
+.tiffin-row {
+  display: grid;
+  gap: 8px;
+  align-items: end;
+  grid-template-columns: 1fr;
+  padding: 12px;
+  border: 1px solid var(--tf-line);
+  border-radius: 12px;
+  background: var(--tf-soft);
+}
+@media (min-width: 680px) {
+  .tiffin-row {
+    grid-template-columns: 1fr 160px auto;
+  }
+}
+.tiffin-field.tiffin-grow,
+.tiffin-field.tiffin-narrow {
+  margin-top: 0;
+}
+.tiffin-field-error,
+.tiffin-form-error {
+  margin: 0;
+  color: var(--tf-danger);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.tiffin-field-error::before,
+.tiffin-form-error::before {
+  content: "Error: ";
+}
+.tiffin-notice {
+  padding: 10px 14px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-soft);
+}
+.tiffin-combo-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tiffin-price {
+  margin: 0;
+  font-weight: 700;
+}
+.tiffin-items {
+  margin: 8px 0 0;
+}
+.tiffin-label {
+  color: var(--tf-muted);
+  font-weight: 600;
+}
+.tiffin-badge {
+  display: inline-block;
+  margin: 6px 0 0;
+  padding: 2px 10px;
+  border: 1px solid var(--tf-line);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.tiffin-archived {
+  margin-top: 24px;
+}
+.tiffin-archived summary {
+  min-height: 44px;
+  padding: 10px 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Weekly menu and special dates */
+.tiffin-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.tiffin-crumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--tf-accent);
+}
+.tiffin-slots {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.tiffin-slot {
+  padding: 18px;
+  border: 1px solid var(--tf-line);
+  border-radius: 14px;
+  background: var(--tf-panel);
+}
+.tiffin-slot-fields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.tiffin-slot .tiffin-field :is(input, select),
+.tiffin-form .tiffin-field select,
+.tiffin-form .tiffin-field input[type="date"] {
+  min-height: 44px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-panel);
+  color: inherit;
+  font: inherit;
+}
+.tiffin-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 8px;
+}
+.tiffin-check input {
+  width: 22px;
+  height: 22px;
+}
+.tiffin-readonly {
+  margin: 12px 0 0;
+}
+.tiffin-readonly dt {
+  color: var(--tf-muted);
+  font-weight: 600;
+}
+.tiffin-readonly dd {
+  margin: 0 0 8px;
+}
+.tiffin-table-wrap {
+  overflow-x: auto;
+}
+.tiffin-grid {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+.tiffin-grid :is(th, td) {
+  padding: 12px;
+  border: 1px solid var(--tf-line);
+  text-align: left;
+  vertical-align: top;
+}
+.tiffin-grid thead th {
+  background: var(--tf-soft);
+}
+.tiffin-grid tbody th {
+  white-space: nowrap;
+}
+.tiffin-picks {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.tiffin-pick {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-soft);
+}
+.tiffin-pick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tiffin-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.tiffin-add select {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0 10px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-panel);
+  color: inherit;
+  font: inherit;
+}
+.tiffin-dirty {
+  color: var(--tf-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.tiffin-overrides {
+  margin-top: 32px;
+}
+.tiffin-shell :is(select, [tabindex="-1"]):focus-visible {
+  outline: 3px solid var(--mm-focus, #d76b29);
+  outline-offset: 2px;
+}

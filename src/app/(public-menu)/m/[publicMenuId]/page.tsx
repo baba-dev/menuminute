@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { coverFor } from "@/modules/menu-product/public-presentation";
 import { publicProduct } from "@/modules/menu-product/service";
@@ -7,6 +7,7 @@ import { PublicMenu } from "@/components/menu-product/public-menu";
 import { GuestOfflineCoordinator } from "@/components/pwa/guest-offline-coordinator";
 import { pwaOperationalEnabledForOutlet } from "@/lib/pwa/rollout";
 import { env } from "@/lib/config/env";
+import { tiffinNavEnabled } from "@/modules/tiffin/dashboard-access";
 import { publicDishRatings, type DishRatings } from "@/modules/reviews/service";
 
 // Must stay dynamic: the page depends on ?lang=, embeds the request time for opening
@@ -56,6 +57,8 @@ export default async function Page({ params, searchParams }: Props) {
   const { lang } = await searchParams;
   const data = await publicProduct(publicMenuId, lang);
   if (!data) notFound();
+  // A tiffin outlet (flag on) shows its weekly menu; every other outlet renders as before.
+  if (tiffinNavEnabled(data.outlet.outletType)) redirect("/m/" + publicMenuId + "/week");
   // Ratings are decoration: a failure must never take the menu down.
   let ratings: DishRatings = {};
   if (env.PUBLIC_DINER_REVIEWS_ENABLED && !data.outlet.isDemoData) {

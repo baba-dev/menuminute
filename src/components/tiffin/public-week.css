@@ -1,0 +1,128 @@
+/* Public weekly menu. Light / Dark / System follow the same pattern as the dashboard tiffin pages. */
+.tiffin-public {
+  --tp-ink: var(--ink, #30251d);
+  --tp-line: #e6d9ce;
+  --tp-muted: #6b5b4f;
+  --tp-panel: #fffcf8;
+  --tp-soft: #f9f0e7;
+  --tp-bg: #fffaf4;
+  --tp-accent: #9a3f12;
+  box-sizing: border-box;
+  max-width: 720px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+  background: var(--tp-bg);
+  color: var(--tp-ink);
+  font-family: var(--font-dm), system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+:root[data-theme="dark"] .tiffin-public {
+  --tp-line: #504239;
+  --tp-muted: #c5b1a1;
+  --tp-panel: #2d2824;
+  --tp-soft: #362e28;
+  --tp-bg: #1f1b18;
+  --tp-ink: #f6ece3;
+  --tp-accent: #ffb36f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .tiffin-public {
+    --tp-line: #504239;
+    --tp-muted: #c5b1a1;
+    --tp-panel: #2d2824;
+    --tp-soft: #362e28;
+    --tp-bg: #1f1b18;
+    --tp-ink: #f6ece3;
+    --tp-accent: #ffb36f;
+  }
+}
+.tiffin-public *,
+.tiffin-public *::before,
+.tiffin-public *::after {
+  box-sizing: border-box;
+}
+.tiffin-public h1 {
+  margin: 0 0 12px;
+  font-size: clamp(1.6rem, 6vw, 2.2rem);
+  line-height: 1.15;
+}
+.tiffin-public-notice {
+  margin: 0 0 24px;
+  padding: 12px 14px;
+  border: 1px solid var(--tp-line);
+  border-left: 4px solid var(--tp-accent);
+  border-radius: 10px;
+  background: var(--tp-soft);
+  font-weight: 600;
+}
+.tiffin-public-day {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--tp-line);
+  border-radius: 14px;
+  background: var(--tp-panel);
+}
+.tiffin-public h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+.tiffin-public h3 {
+  margin: 14px 0 8px;
+  font-size: 1rem;
+}
+.tiffin-public-window {
+  margin-left: 6px;
+  color: var(--tp-muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.tiffin-public-state {
+  margin: 0;
+  color: var(--tp-muted);
+  font-style: italic;
+}
+.tiffin-public ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tiffin-public-combos {
+  display: grid;
+  gap: 10px;
+}
+.tiffin-public-combo {
+  padding: 12px;
+  border: 1px solid var(--tp-line);
+  border-radius: 10px;
+  background: var(--tp-bg);
+}
+.tiffin-public-combo-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.tiffin-public-combo-name {
+  font-weight: 700;
+}
+.tiffin-public-price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.tiffin-public-desc {
+  margin: 6px 0 0;
+  color: var(--tp-muted);
+}
+.tiffin-public-items {
+  margin-top: 6px !important;
+  color: var(--tp-ink);
+}
+.tiffin-public-addons {
+  margin-top: 8px;
+  color: var(--tp-muted);
+}
+.tiffin-public-addons-title {
+  margin: 0 0 2px;
+  font-weight: 600;
+}

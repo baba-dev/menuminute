@@ -14,6 +14,7 @@ export type NavId =
   | "floor"
   | "menu"
   | "qr"
+  | "tiffin"
   | "reports"
   | "reviews"
   | "organization"
@@ -29,12 +30,13 @@ export type NavIcon =
   | "floor"
   | "menu"
   | "qr"
+  | "tiffin"
   | "reports"
   | "star"
   | "organization"
   | "settings";
 
-type Gate = "ordering" | "kitchen" | "crm" | "reviews" | null;
+type Gate = "ordering" | "kitchen" | "crm" | "reviews" | "tiffin" | null;
 
 export type NavItem = {
   id: NavId;
@@ -133,6 +135,17 @@ export const navItems: readonly NavItem[] = [
     keywords: ["print", "table tent", "scan"],
   },
   {
+    id: "tiffin",
+    href: "/dashboard/tiffin",
+    label: "Tiffin menu",
+    shortLabel: "Tiffin",
+    description: "Set up combos and the weekly lunch and dinner menu.",
+    group: "menu",
+    icon: "tiffin",
+    gate: "tiffin",
+    keywords: ["combos", "thali", "weekly menu", "home chef", "meals"],
+  },
+  {
     id: "guests",
     href: "/dashboard/guests",
     label: "Guests",
@@ -206,6 +219,11 @@ export function navState(item: NavItem, capabilities: DashboardNavigation | unde
     return capabilities?.reviews === true
       ? { state: "available", label: item.label }
       : { state: "unavailable", reason: "not-enabled", label: item.label };
+  // Only a tiffin outlet with the feature switched on (decided on the server) has this destination.
+  if (item.gate === "tiffin")
+    return capabilities?.tiffin === true
+      ? { state: "available", label: item.label }
+      : { state: "unavailable", reason: "not-enabled", label: item.label };
   if (item.gate === "crm") {
     if (!capabilities) return { state: "unavailable", reason: "unknown", label: item.label };
     if (!capabilities.crm)
@@ -238,6 +256,7 @@ export function resolveNavigation(
 ): ResolvedNavItem[] {
   return navItems
     .filter((item) => item.gate !== "reviews" || capabilities?.reviews === true)
+    .filter((item) => item.gate !== "tiffin" || capabilities?.tiffin === true)
     .map((item) => ({ ...item, nav: navState(item, capabilities) }));
 }
 

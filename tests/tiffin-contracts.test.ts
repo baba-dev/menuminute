@@ -2,8 +2,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   areaInputSchema,
   comboInputSchema,
+  comboSaveSchema,
+  overrideSetSchema,
   slotInputSchema,
   tiffinEnabled,
+  tiffinFlagEnabled,
+  tiffinQuoteInputSchema,
+  weekSetSchema,
   TIFFIN_OUTLET_TYPE,
   SLOT_KINDS,
 } from "@/modules/tiffin/contracts";
@@ -73,6 +78,125 @@ describe("areaInputSchema", () => {
   it("rejects blank and accepts trimmed names", () => {
     expect(areaInputSchema.safeParse({ name: "  " }).success).toBe(false);
     expect(areaInputSchema.parse({ name: " Koramangala " }).name).toBe("Koramangala");
+  });
+});
+
+describe("phase 1 boundaries", () => {
+  it("bounds combo name, items, add-ons, quantity and price", () => {
+    const ok = (v: unknown) => comboInputSchema.safeParse(v).success;
+    const item = { label: "Dal", quantity: 1 };
+    const addon = { label: "Raita", priceMinor: 0 };
+    expect(ok({ ...thali, name: "x".repeat(80) })).toBe(true);
+    expect(ok({ ...thali, name: "x".repeat(81) })).toBe(false);
+    expect(ok({ ...thali, name: "   " })).toBe(false);
+    expect(ok({ ...thali, items: Array.from({ length: 20 }, () => item) })).toBe(true);
+    expect(ok({ ...thali, items: Array.from({ length: 21 }, () => item) })).toBe(false);
+    expect(ok({ ...thali, addons: Array.from({ length: 20 }, () => addon) })).toBe(true);
+    expect(ok({ ...thali, addons: Array.from({ length: 21 }, () => addon) })).toBe(false);
+    expect(ok({ ...thali, items: [{ label: "Dal", quantity: 0 }] })).toBe(false);
+    expect(ok({ ...thali, items: [{ label: "Dal", quantity: 99 }] })).toBe(true);
+    expect(ok({ ...thali, items: [{ label: "Dal", quantity: 100 }] })).toBe(false);
+    expect(ok({ ...thali, priceMinor: 2147483647 })).toBe(true);
+    expect(ok({ ...thali, priceMinor: 2147483648 })).toBe(false);
+  });
+  it("rejects startMinute 1440", () => {
+    expect(slotInputSchema.safeParse({ ...slot, startMinute: 1440 }).success).toBe(false);
+  });
+});
+
+describe("comboSaveSchema", () => {
+  it("allows an optional id and rejects unknown keys", () => {
+    expect(comboSaveSchema.safeParse(thali).success).toBe(true);
+    expect(comboSaveSchema.safeParse({ ...thali, id: "c1" }).success).toBe(true);
+    expect(comboSaveSchema.safeParse({ ...thali, extra: 1 }).success).toBe(false);
+  });
+});
+
+describe("weekSetSchema", () => {
+  const base = { slotKind: "lunch", weekday: 0, comboIds: ["a", "b"] };
+  it("validates weekday, unique ids and unknown keys", () => {
+    expect(weekSetSchema.safeParse(base).success).toBe(true);
+    expect(weekSetSchema.safeParse({ ...base, weekday: 6 }).success).toBe(true);
+    expect(weekSetSchema.safeParse({ ...base, weekday: 7 }).success).toBe(false);
+    expect(weekSetSchema.safeParse({ ...base, comboIds: ["a", "a"] }).success).toBe(false);
+    expect(
+      weekSetSchema.safeParse({ ...base, comboIds: Array.from({ length: 51 }, (_, i) => `c${i}`) })
+        .success
+    ).toBe(false);
+    expect(weekSetSchema.safeParse({ ...base, extra: true }).success).toBe(false);
+  });
+});
+
+describe("overrideSetSchema", () => {
+  const base = { slotKind: "dinner", localDate: "2026-02-27", closed: false, comboIds: ["a"] };
+  it("validates dates, unique ids and unknown keys", () => {
+    expect(overrideSetSchema.safeParse(base).success).toBe(true);
+    expect(overrideSetSchema.safeParse({ ...base, localDate: "2026-02-30" }).success).toBe(false);
+    expect(overrideSetSchema.safeParse({ ...base, localDate: "26-2-27" }).success).toBe(false);
+    expect(overrideSetSchema.safeParse({ ...base, comboIds: ["a", "a"] }).success).toBe(false);
+    expect(overrideSetSchema.safeParse({ ...base, extra: true }).success).toBe(false);
+  });
+});
+
+describe("tiffinQuoteInputSchema", () => {
+  const line = { comboId: "a", addonIds: ["x"], quantity: 2 };
+  const base = { localDate: "2026-02-27", slotKind: "lunch", lines: [line] };
+  it("validates lines and bounds", () => {
+    expect(tiffinQuoteInputSchema.safeParse(base).success).toBe(true);
+    expect(tiffinQuoteInputSchema.safeParse({ ...base, localDate: "2026-02-30" }).success).toBe(
+      false
+    );
+    expect(tiffinQuoteInputSchema.safeParse({ ...base, lines: [] }).success).toBe(false);
+    expect(
+      tiffinQuoteInputSchema.safeParse({ ...base, lines: Array.from({ length: 101 }, () => line) })
+        .success
+    ).toBe(false);
+    expect(
+      tiffinQuoteInputSchema.safeParse({
+        ...base,
+        lines: [{ ...line, addonIds: Array.from({ length: 21 }, (_, i) => `x${i}`) }],
+      }).success
+    ).toBe(false);
+    expect(
+      tiffinQuoteInputSchema.safeParse({ ...base, lines: [{ ...line, quantity: 0 }] }).success
+    ).toBe(false);
+    expect(tiffinQuoteInputSchema.safeParse({ ...base, extra: 1 }).success).toBe(false);
+  });
+});
+
+describe("tiffinQuoteInputSchema line quantity", () => {
+  const withQty = (quantity: number) => ({
+    localDate: "2026-02-27",
+    slotKind: "lunch",
+    lines: [{ comboId: "a", addonIds: [], quantity }],
+  });
+  it("accepts any positive safe integer (no merchant-facing cap)", () => {
+    expect(tiffinQuoteInputSchema.safeParse(withQty(1000000)).success).toBe(true);
+    expect(tiffinQuoteInputSchema.safeParse(withQty(Number.MAX_SAFE_INTEGER)).success).toBe(true);
+  });
+  it("rejects zero, negative, fractional and unsafe quantities", () => {
+    for (const q of [0, -1, 1.5, 2 ** 53]) {
+      expect(tiffinQuoteInputSchema.safeParse(withQty(q)).success).toBe(false);
+    }
+  });
+});
+
+describe("tiffinFlagEnabled", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it("parses only the flag, fail closed", () => {
+    vi.stubEnv("TIFFIN_ENABLED", undefined as unknown as string);
+    expect(tiffinFlagEnabled()).toBe(false);
+    vi.stubEnv("TIFFIN_ENABLED", "true");
+    expect(tiffinFlagEnabled()).toBe(true);
+    vi.stubEnv("TIFFIN_ENABLED", "false");
+    expect(tiffinFlagEnabled()).toBe(false);
+    vi.stubEnv("TIFFIN_ENABLED", "yes");
+    expect(() => tiffinFlagEnabled()).toThrow();
+  });
+  it("does not need the rest of the environment to be valid", () => {
+    vi.stubEnv("TIFFIN_ENABLED", "true");
+    vi.stubEnv("DATABASE_URL", "not-a-url");
+    expect(tiffinFlagEnabled()).toBe(true);
   });
 });
 

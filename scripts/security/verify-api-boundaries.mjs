@@ -31,6 +31,16 @@ if (
 ) {
   violations.push("nginx: guest-order edge attestation");
 }
+// Public tiffin routes need the same signed client identity or they fail closed with 503.
+const tiffinBlock = /^location \/api\/public-tiffin \{[^}]*\}/m.exec(nginx)?.[0] ?? "";
+if (
+  !tiffinBlock.includes("include /etc/menuminute/nginx-order-edge-secret.conf;") ||
+  !tiffinBlock.includes("proxy_set_header X-MenuMinute-Client-IP $remote_addr;") ||
+  !tiffinBlock.includes("X-MenuMinute-Edge-Key $menuminute_edge_secret;") ||
+  nginx.includes("location ^~ /api/public-tiffin")
+) {
+  violations.push("nginx: public tiffin edge attestation");
+}
 if (violations.length) {
   process.stderr.write(
     "Unbounded or unattested public API path(s):\n" + violations.join("\n") + "\n"

@@ -33,7 +33,7 @@ validating schema. History: [Phase 1 implementation and cutover](foundation/phas
 | PUBLIC_DINER_DEVICE_ENABLED                                      | Default-off opt-in diner device profile (httpOnly cookie `menuminute.guest`, migration 0101). Needs owner privacy approval before enabling.         |
 | PUBLIC_DINER_STREAM_ENABLED                                      | Default-off live order updates over SSE with polling fallback. Requires Nginx buffering off for `/api/public-orders/*/stream`.                      |
 | PUBLIC_DINER_REVIEWS_ENABLED                                     | Default-off verified dish ratings and moderated comments (migration 0103). Needs owner approval of public user-generated content.                   |
-| TIFFIN_ENABLED                                                   | Default-off gate for creating `tiffin` outlets (migration 0114). Do not enable in production before tiffin phases 2-3; see [tiffin](tiffin.md).     |
+| TIFFIN_ENABLED                                                   | Default-off gate for `tiffin` outlets, routes and pages. Keep off in production until phase 3 booking; see [tiffin](tiffin.md).                     |
 
 `DEMO_MODE_ENABLED=false` (default) is the public-demo kill switch for the worker reset job; see [demo runbook](demo.md).
 

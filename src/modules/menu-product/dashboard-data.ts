@@ -70,6 +70,8 @@ export type DashboardNavigation = {
   crm?: boolean;
   /** Guest reviews are switched on and this viewer may moderate them (outlet.manage). */
   reviews?: boolean;
+  /** Set by the dashboard layout: the selected outlet is a tiffin outlet and TIFFIN_ENABLED is on. */
+  tiffin?: boolean;
   kitchen: boolean;
   ordersRead: boolean;
   kitchenRead: boolean;

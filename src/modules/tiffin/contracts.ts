@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { parseEnv } from "@/lib/config/env";
 
 export const TIFFIN_OUTLET_TYPE = "tiffin" as const;
 export const SLOT_KINDS = ["lunch", "dinner"] as const;
@@ -45,7 +44,86 @@ export const comboInputSchema = z.object({
 
 export const areaInputSchema = z.object({ name: z.string().trim().min(1).max(60) });
 
-/** Reads the flag at call time (not the import-time `env` snapshot) so tests can toggle it. */
+const idList = z
+  .array(z.string().min(1).max(64))
+  .max(50)
+  .refine((ids) => new Set(ids).size === ids.length, { message: "comboIds must be unique" });
+
+const localDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const d = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+  }, "Not a valid calendar date");
+
+export const comboSaveSchema = comboInputSchema
+  .extend({ id: z.string().min(1).max(64).optional() })
+  .strict();
+
+export const weekSetSchema = z
+  .object({
+    slotKind: z.enum(SLOT_KINDS),
+    weekday: z.number().int().min(0).max(6),
+    comboIds: idList,
+  })
+  .strict();
+
+export const overrideSetSchema = z
+  .object({
+    slotKind: z.enum(SLOT_KINDS),
+    localDate,
+    closed: z.boolean(),
+    comboIds: idList,
+  })
+  .strict();
+
+/** Slot save: the slot fields plus the optional `enabled` switch accepted by tiffin_slot_save. */
+export const slotSaveSchema = z
+  .object({ ...slotInputSchema.shape, enabled: z.boolean().optional() })
+  .strict()
+  .refine((slot) => slot.endMinute > slot.startMinute, {
+    message: "endMinute must be after startMinute",
+    path: ["endMinute"],
+  });
+
+/** Archive (archived: true) or restore (archived: false) one combo by id. */
+export const comboArchiveSchema = z
+  .object({ id: z.string().min(1).max(64), archived: z.boolean() })
+  .strict();
+
+/** Removes the override for one slot and date, restoring the weekday menu. */
+export const overrideClearSchema = z
+  .object({ slotKind: z.enum(SLOT_KINDS), localDate, clear: z.literal(true) })
+  .strict();
+
+export const tiffinQuoteInputSchema = z
+  .object({
+    localDate,
+    slotKind: z.enum(SLOT_KINDS),
+    lines: z
+      .array(
+        z
+          .object({
+            comboId: z.string().min(1).max(64),
+            addonIds: z.array(z.string().min(1).max(64)).max(20),
+            quantity: z.number().int().positive().safe(),
+          })
+          .strict()
+      )
+      .min(1)
+      .max(100),
+  })
+  .strict();
+
+const strictFlag = z.enum(["true", "false"]).transform((v) => v === "true");
+
+/** Parses only TIFFIN_ENABLED at call time (fail closed: unset is off, other values throw). */
+export function tiffinFlagEnabled(): boolean {
+  const raw = process.env["TIFFIN_ENABLED"];
+  return raw === undefined ? false : strictFlag.parse(raw);
+}
+
 export function tiffinEnabled(): boolean {
-  return parseEnv(process.env).TIFFIN_ENABLED;
+  return tiffinFlagEnabled();
 }
