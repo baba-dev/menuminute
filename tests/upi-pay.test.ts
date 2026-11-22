@@ -4,6 +4,7 @@ import {
   inrMinorToDecimal,
   normalizePayeeName,
   parseUpiId,
+  samplePayBlock,
 } from "../src/lib/pos/upi";
 
 describe("parseUpiId", () => {
@@ -88,5 +89,20 @@ describe("buildUpiPayUri", () => {
     expect(buildUpiPayUri({ ...base, vpa: "a".repeat(120) + "@okhdfc" })).toBeNull();
     expect(buildUpiPayUri({ ...base, amountMinor: "0" })).toBeNull();
     expect(buildUpiPayUri({ ...base, payeeName: "" })).toBeNull();
+  });
+});
+
+describe("samplePayBlock", () => {
+  it("builds the settings preview with a fixed sample amount and bill number", () => {
+    const block = samplePayBlock("Spice@OkHDFC", "Spice Route Kitchen")!;
+    expect(block.amountLabel).toBe("Rs 840.00");
+    expect(block.upiId).toBe("spice@okhdfc");
+    expect(block.payeeName).toBe("Spice Route Kitchen");
+    expect(block.uri).toContain("am=840.00");
+    expect(block.uri).toContain("tn=Bill%201042");
+  });
+  it("returns null until both fields are valid", () => {
+    expect(samplePayBlock("nope", "Spice")).toBeNull();
+    expect(samplePayBlock("spice@okhdfc", "")).toBeNull();
   });
 });

@@ -3,6 +3,8 @@
  * a text link that a payer's own UPI app opens.
  */
 
+import type { PayBlockInput } from "./pay-block";
+
 /** Maximum link size so the QR (error-correction level M) stays at version 5 (37 modules). */
 export const UPI_URI_MAX_BYTES = 84;
 
@@ -56,4 +58,18 @@ export function buildUpiPayUri(input: {
     if (uri.length <= UPI_URI_MAX_BYTES) return uri;
   }
   return null;
+}
+
+/** Fixed sample bill used by the settings and onboarding previews: Rs 840.00, bill 1042. */
+export function samplePayBlock(vpa: string, payeeName: string): PayBlockInput | null {
+  const upiId = parseUpiId(vpa);
+  const payee = normalizePayeeName(payeeName);
+  if (!upiId || !payee) return null;
+  const uri = buildUpiPayUri({
+    vpa: upiId,
+    payeeName: payee,
+    amountMinor: "84000",
+    billNo: "1042",
+  });
+  return uri ? { uri, amountLabel: "Rs 840.00", payeeName: payee, upiId } : null;
 }
