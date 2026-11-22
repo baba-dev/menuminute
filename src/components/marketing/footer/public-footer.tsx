@@ -32,6 +32,7 @@ const groups = [
   {
     title: "Resources",
     links: [
+      { label: "Food Encyclopedia", href: "/explore" },
       { label: "Help centre", href: "/help" },
       { label: "FAQs", href: "/help/faq" },
       { label: "User Guide", href: "/help/guide" },

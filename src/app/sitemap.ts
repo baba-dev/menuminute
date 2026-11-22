@@ -6,6 +6,8 @@ import { industrySolutions } from "@/content/marketing/solutions";
 
 import { PUBLIC_ORIGIN as BASE_URL } from "@/lib/marketing/seo";
 import { demoModeEnabled } from "@/modules/demo/ids";
+import { publishedFoodEntries } from "@/modules/food-encyclopedia/pilot";
+import { foodPath } from "@/modules/food-encyclopedia/contracts";
 
 // Never prerendered at build time: the public menu list comes from PostgreSQL.
 export const dynamic = "force-dynamic";
@@ -155,6 +157,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "monthly",
     priority: 0.6,
   }));
+  // Only independently reviewed, explicitly published editorial guides are indexable.
+  // Preview/design profiles are NEVER promoted into the sitemap.
+  const foodRoutes: MetadataRoute.Sitemap = publishedFoodEntries.map((entry) => ({
+    url: BASE_URL + foodPath(entry),
+    lastModified: entry.reviewedAt,
+    changeFrequency: "monthly",
+    priority: 0.65,
+  }));
+  const foodHubs: MetadataRoute.Sitemap = foodRoutes.length
+    ? [
+        { url: BASE_URL + "/explore", changeFrequency: "weekly", priority: 0.8 },
+        { url: BASE_URL + "/explore/browse", changeFrequency: "weekly", priority: 0.65 },
+      ]
+    : [];
   const menuRoutes = await publicMenuEntries();
   return [
     ...staticRoutes,
@@ -162,6 +178,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...ownerGuideRoutes,
     ...customerGuideRoutes,
     ...docsRoutes,
+    ...foodHubs,
+    ...foodRoutes,
     ...menuRoutes,
   ];
 }
