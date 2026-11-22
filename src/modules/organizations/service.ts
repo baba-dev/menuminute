@@ -16,7 +16,12 @@ import {
 import { withActor, type Actor } from "@/modules/tenancy/service";
 import { verifyOutletTimezone } from "@/modules/timezones/service";
 import { invalidateOutletMenuCaches } from "@/modules/menu-product/cache";
-import { createRestaurantSchema } from "@/modules/restaurants/service";
+import {
+  assertOutletTypeAllowed,
+  createRestaurantSchema,
+  tiffinFulfillmentModes,
+} from "@/modules/restaurants/service";
+import { TIFFIN_OUTLET_TYPE } from "@/modules/tiffin/contracts";
 import { AppError, ConflictError, ForbiddenError, ValidationError } from "@/lib/errors";
 const id = z.string().min(1).max(128);
 const name = z.string().trim().min(2).max(100);
@@ -112,6 +117,13 @@ export function domainError(error: unknown): never {
 export async function manageOrganization(actor: Actor, organizationId: string, raw: unknown) {
   const input = organizationCommandSchema.parse(raw);
   id.parse(organizationId);
+  // Reject before any SQL: the database accepts 'tiffin', so the flag is guarded only here.
+  const tiffinData =
+    input.command.action === "outlet.create" || input.command.action === "outlet.update"
+      ? input.command.data
+      : undefined;
+  // Creates are fully gated. Updates are gated below, only when the stored type is not already tiffin.
+  if (input.command.action === "outlet.create") assertOutletTypeAllowed(tiffinData?.outletType);
   try {
     const mutation = await withActor(actor, async (tx) => {
       const before = await tx.execute<{ id: string }>(
@@ -120,6 +132,29 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
       // Pass the validated canonical identifier to the SQL command, not the
       // original legacy alias (e.g. Asia/Calcutta) supplied by an API client.
       const commandData: Record<string, unknown> = { ...input.command.data };
+      if (
+        input.command.action === "outlet.update" &&
+        (tiffinData?.outletType === TIFFIN_OUTLET_TYPE || tiffinData?.fulfillmentModes)
+      ) {
+        // Kill switch for new exposure only: an outlet that is already tiffin stays editable.
+        // The current type is read in this tenant-scoped transaction, never from the client.
+        const stored = await tx.execute<{ outlet_type: string }>(
+          sql`select outlet_type from restaurants where id=${input.command.data.outletId} and organization_id=${organizationId}`
+        );
+        const storedType = stored.rows[0]?.outlet_type;
+        if (tiffinData?.outletType === TIFFIN_OUTLET_TYPE && storedType !== TIFFIN_OUTLET_TYPE)
+          assertOutletTypeAllowed(TIFFIN_OUTLET_TYPE);
+        // Effective type is the requested one, else the stored one: tiffin stays pickup-only.
+        if ((tiffinData?.outletType ?? storedType) === TIFFIN_OUTLET_TYPE) {
+          commandData.fulfillmentModes = tiffinFulfillmentModes(tiffinData?.fulfillmentModes);
+        }
+      }
+      if (
+        input.command.action === "outlet.create" &&
+        tiffinData?.outletType === TIFFIN_OUTLET_TYPE
+      ) {
+        commandData.fulfillmentModes = tiffinFulfillmentModes(tiffinData.fulfillmentModes);
+      }
       if (
         (input.command.action === "outlet.create" || input.command.action === "outlet.update") &&
         input.command.data.timezone

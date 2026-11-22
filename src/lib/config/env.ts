@@ -195,6 +195,8 @@ const envSchema = z
     PUBLIC_DINER_DEVICE_ENABLED: strictBoolean.default(false),
     PUBLIC_DINER_STREAM_ENABLED: strictBoolean.default(false),
     PUBLIC_DINER_REVIEWS_ENABLED: strictBoolean.default(false),
+    // Tiffin & Home-Chef Hub. OFF until the owner enables it.
+    TIFFIN_ENABLED: strictBoolean.default(false),
     // Public-demo Ember allowance: bounds worst-case provider spend of the shared demo account.
     DEMO_AI_DAILY_TURNS: z.coerce.number().int().min(0).max(100000).default(150),
     DEMO_AI_SOURCE_TURNS_PER_10MIN: z.coerce.number().int().min(1).max(1000).default(6),

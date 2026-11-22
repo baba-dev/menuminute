@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { listOrganizations } from "@/modules/organizations/service";
-import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { getDefaultOrActiveRestaurant, tiffinTypeOffered } from "@/modules/restaurants/service";
 import { canManageOutletProfile, editableOutletProfile } from "@/modules/restaurants/profile";
 import { OutletAtelier } from "./outlet-atelier";
 import "./settings.css";
@@ -55,6 +55,7 @@ export default async function SettingsPage() {
       }}
       initial={editableOutletProfile(outlet)}
       canManage={canManage}
+      tiffinOffered={tiffinTypeOffered()}
     />
   );
 }

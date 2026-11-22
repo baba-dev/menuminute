@@ -16,6 +16,7 @@ export function StepOperations({
   const hasPickup = draft.fulfillmentModes.includes("pickup");
   const toggle = (mode: "dine_in" | "pickup") => {
     const active = draft.fulfillmentModes.includes(mode);
+    if (mode === "dine_in" && draft.outletType === "tiffin") return;
     if (active && draft.fulfillmentModes.length === 1) return;
     onChange(
       "fulfillmentModes",
@@ -60,6 +61,7 @@ export function StepOperations({
                 className="wizard-mode-checkbox"
                 type="checkbox"
                 checked={draft.fulfillmentModes.includes(mode.id)}
+                disabled={mode.id === "dine_in" && draft.outletType === "tiffin"}
                 onChange={() => toggle(mode.id)}
               />
               <div>
