@@ -39,6 +39,9 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await expect(page.getByLabel(/Menu pricing currency/)).toHaveValue("OMR");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
+  // The optional "Get paid by UPI" step can be skipped.
+  await expect(page.getByRole("heading", { name: "Get paid by UPI." })).toBeVisible();
+  await page.getByRole("button", { name: "Continue" }).click();
   // The timezone must be explicitly confirmed before the first outlet can be created.
   const launch = page.getByRole("button", { name: "Confirm & Create Outlet" });
   await expect(launch).toBeDisabled();
