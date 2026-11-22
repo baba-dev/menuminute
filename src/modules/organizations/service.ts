@@ -122,7 +122,8 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
     input.command.action === "outlet.create" || input.command.action === "outlet.update"
       ? input.command.data
       : undefined;
-  if (tiffinData) assertOutletTypeAllowed(tiffinData.outletType);
+  // Creates are fully gated. Updates are gated below, only when the stored type is not already tiffin.
+  if (input.command.action === "outlet.create") assertOutletTypeAllowed(tiffinData?.outletType);
   try {
     const mutation = await withActor(actor, async (tx) => {
       const before = await tx.execute<{ id: string }>(
@@ -131,6 +132,18 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
       // Pass the validated canonical identifier to the SQL command, not the
       // original legacy alias (e.g. Asia/Calcutta) supplied by an API client.
       const commandData: Record<string, unknown> = { ...input.command.data };
+      if (
+        input.command.action === "outlet.update" &&
+        tiffinData?.outletType === TIFFIN_OUTLET_TYPE
+      ) {
+        // Kill switch for new exposure only: an outlet that is already tiffin stays editable.
+        // The current type is read in this tenant-scoped transaction, never from the client.
+        const stored = await tx.execute<{ outlet_type: string }>(
+          sql`select outlet_type from restaurants where id=${input.command.data.outletId} and organization_id=${organizationId}`
+        );
+        if (stored.rows[0]?.outlet_type !== TIFFIN_OUTLET_TYPE)
+          assertOutletTypeAllowed(TIFFIN_OUTLET_TYPE);
+      }
       if (tiffinData?.outletType === TIFFIN_OUTLET_TYPE) {
         commandData.fulfillmentModes = tiffinFulfillmentModes(tiffinData.fulfillmentModes);
       }
