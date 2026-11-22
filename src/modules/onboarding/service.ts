@@ -4,8 +4,10 @@ import { z } from "zod";
 import { withActor, type Actor } from "@/modules/tenancy/service";
 import {
   assertFulfillmentModesForOutletType,
+  assertOutletTypeAllowed,
   createRestaurant,
   createRestaurantSchema,
+  tiffinFulfillmentModes,
 } from "@/modules/restaurants/service";
 import { env } from "@/lib/config/env";
 import { sendAuthEmail } from "@/lib/auth-email";
@@ -83,6 +85,10 @@ export async function onboardingState(actor: Actor) {
 }
 export async function saveOnboarding(actor: Actor, input: unknown) {
   const draft = onboardingDraftSchema.parse(input);
+  assertOutletTypeAllowed(draft.outletType);
+  // Reject at save so a tiffin draft can never reach provisioning with dine-in.
+  if (draft.outletType === "tiffin" && draft.fulfillmentModes !== undefined)
+    tiffinFulfillmentModes(draft.fulfillmentModes);
   assertFulfillmentModesForOutletType(draft);
   return withActor(actor, async (tx) => {
     const current = await tx.execute<Progress>(
@@ -126,6 +132,9 @@ export async function provisionOnboarding(actor: Actor) {
   if (!state.key) throw new ValidationError("Save your outlet settings first.");
   const input = createRestaurantSchema.safeParse(state.draft);
   if (!input.success) throw new ValidationError("Complete the required outlet settings.");
+  // Before the draft is claimed as 'provisioning', so a disabled flag leaves it resumable.
+  assertOutletTypeAllowed(input.data.outletType);
+  if (input.data.outletType === "tiffin") tiffinFulfillmentModes(input.data.fulfillmentModes);
   // Reject combinations the database would refuse before the draft is claimed as provisioning.
   assertFulfillmentModesForOutletType(input.data);
   await withActor(actor, async (tx) => {

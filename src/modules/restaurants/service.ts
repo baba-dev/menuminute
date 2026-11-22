@@ -14,6 +14,7 @@ import { currencyExponent } from "@/lib/money";
 import { canonicalOutletTimezone, isRuntimeTimezone } from "@/lib/outlet-timezones";
 import { regions } from "@/modules/onboarding/locales";
 import { verifyOutletTimezone } from "@/modules/timezones/service";
+import { TIFFIN_OUTLET_TYPE, tiffinEnabled } from "@/modules/tiffin/contracts";
 export const createRestaurantSchema = z.object({
   fulfillmentModes: z
     .array(z.enum(["dine_in", "pickup"]))
@@ -70,7 +71,15 @@ export const createRestaurantSchema = z.object({
     .trim()
     .transform(canonicalOutletTimezone)
     .refine(isRuntimeTimezone, "Unsupported IANA restaurant timezone"),
-  outletType: z.enum(["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"]),
+  outletType: z.enum([
+    "restaurant",
+    "cafe",
+    "takeout",
+    "cloud_kitchen",
+    "hotel",
+    "mixed",
+    "tiffin",
+  ]),
   pickupLeadMinutes: z.number().int().min(0).max(240).optional(),
   pickupSlotMinutes: z.number().int().min(5).max(120).optional(),
   pickupAdvanceDays: z.number().int().min(1).max(30).optional(),
@@ -93,6 +102,31 @@ export function assertFulfillmentModesForOutletType(input: {
     });
 }
 export type CreateRestaurantInput = z.input<typeof createRestaurantSchema>;
+/**
+ * Server-side gate for every path that can set an outlet type. The provisioning SQL accepts
+ * 'tiffin' unconditionally (outlet_type_valid), so this check is the only flag guard and must run
+ * before any insert/update. It only evaluates the flag for tiffin, so other types never read env.
+ */
+export function assertOutletTypeAllowed(outletType: string | undefined): void {
+  if (outletType === TIFFIN_OUTLET_TYPE && !tiffinEnabled()) {
+    throw new ValidationError("Tiffin outlets are not available yet");
+  }
+}
+/** UI-only: whether to offer the tiffin type. Fails closed (hidden) if the environment is invalid. */
+export function tiffinTypeOffered(): boolean {
+  try {
+    return tiffinEnabled();
+  } catch {
+    return false;
+  }
+}
+/** Tiffin is pickup-only until delivery lands; absent modes default to pickup, never dine_in. */
+export function tiffinFulfillmentModes(modes: readonly string[] | undefined): ["pickup"] {
+  if (modes !== undefined && !(modes.length === 1 && modes[0] === "pickup")) {
+    throw new ValidationError("Tiffin outlets support pickup only for now");
+  }
+  return ["pickup"];
+}
 export const getRestaurantsByUserId = cache(async function getRestaurantsByUserId(userId: string) {
   return withActor({ userId }, (tx) =>
     tx.select().from(restaurants).where(eq(restaurants.isActive, true)).orderBy(asc(restaurants.id))
@@ -132,7 +166,12 @@ export async function createRestaurant(
   raw: CreateRestaurantInput,
   requestKey = nanoid(32)
 ) {
-  const input = createRestaurantSchema.parse(raw);
+  const parsed = createRestaurantSchema.parse(raw);
+  assertOutletTypeAllowed(parsed.outletType);
+  const input =
+    parsed.outletType === TIFFIN_OUTLET_TYPE
+      ? { ...parsed, fulfillmentModes: tiffinFulfillmentModes(parsed.fulfillmentModes) }
+      : parsed;
   const id = createHash("sha256")
     .update(ownerId + ":" + requestKey)
     .digest("hex");

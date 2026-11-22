@@ -10,14 +10,19 @@ const outletTypes = [
   { id: "hotel", label: "Hotel dining", mode: "dine_in" },
   { id: "mixed", label: "Mixed hospitality", mode: "dine_in" },
 ] as const;
+const tiffinType = { id: "tiffin", label: "Tiffin / Home chef", mode: "pickup" } as const;
 
 export function QuickMenuIdentity({
   draft,
   onChange,
+  tiffinOffered = false,
 }: {
   draft: WizardDraft;
+  /** Server-computed TIFFIN_ENABLED result; the type is hidden unless true. */
+  tiffinOffered?: boolean;
   onChange: <K extends keyof WizardDraft>(key: K, value: WizardDraft[K]) => void;
 }) {
+  const availableTypes = tiffinOffered ? [...outletTypes, tiffinType] : outletTypes;
   return (
     <div className="wizard-content">
       <div className="wizard-header">
@@ -53,13 +58,13 @@ export function QuickMenuIdentity({
           id="wz-quick-type"
           value={draft.outletType}
           onChange={(event) => {
-            const type = outletTypes.find((item) => item.id === event.target.value);
+            const type = availableTypes.find((item) => item.id === event.target.value);
             if (!type) return;
             onChange("outletType", type.id);
             onChange("fulfillmentModes", [type.mode]);
           }}
         >
-          {outletTypes.map((type) => (
+          {availableTypes.map((type) => (
             <option value={type.id} key={type.id}>
               {type.label}
             </option>

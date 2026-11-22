@@ -350,7 +350,9 @@ export function OrganizationManager({
   organizations,
   initialOrganizationId,
   planUsage = null,
+  tiffinOffered = false,
 }: {
+  tiffinOffered?: boolean;
   organizations: Organization[];
   initialOrganizationId?: string;
   planUsage?: { organizationId: string; outletName: string; view: PlanUsageView } | null;
@@ -736,7 +738,7 @@ export function OrganizationManager({
                             })
                           }
                         >
-                          <OutletFields />
+                          <OutletFields tiffinOffered={tiffinOffered} />
                         </Form>
                       </>
                     )}
@@ -1167,7 +1169,13 @@ export function OrganizationManager({
     </div>
   );
 }
-function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
+function OutletFields({
+  outlet,
+  tiffinOffered = false,
+}: {
+  outlet?: Detail["outlets"][number];
+  tiffinOffered?: boolean;
+}) {
   const [type, setType] = useState(outlet?.outletType ?? "restaurant");
   const [modes, setModes] = useState(outlet?.fulfillmentModes ?? ["dine_in"]);
   return (
@@ -1190,13 +1198,21 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
           onChange={(e) => {
             setType(e.target.value);
             setModes(
-              ["cafe", "takeout", "cloud_kitchen"].includes(e.target.value)
+              ["cafe", "takeout", "cloud_kitchen", "tiffin"].includes(e.target.value)
                 ? ["pickup"]
                 : ["dine_in"]
             );
           }}
         >
-          {["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"].map((t) => (
+          {[
+            "restaurant",
+            "cafe",
+            "takeout",
+            "cloud_kitchen",
+            "hotel",
+            "mixed",
+            ...(tiffinOffered || type === "tiffin" ? ["tiffin"] : []),
+          ].map((t) => (
             <option key={t}>{t}</option>
           ))}
         </select>
@@ -1209,7 +1225,7 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
               name="modes"
               value={m}
               checked={modes.includes(m)}
-              disabled={m === "dine_in" && ["takeout", "cloud_kitchen"].includes(type)}
+              disabled={m === "dine_in" && ["takeout", "cloud_kitchen", "tiffin"].includes(type)}
               onChange={(e) =>
                 setModes(e.target.checked ? [...modes, m] : modes.filter((value) => value !== m))
               }

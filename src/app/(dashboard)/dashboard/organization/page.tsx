@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { listOrganizations } from "@/modules/organizations/service";
-import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { getDefaultOrActiveRestaurant, tiffinTypeOffered } from "@/modules/restaurants/service";
 import { OrganizationManager } from "./organization-manager";
 import { getPlanUsageView } from "@/modules/plans/usage";
 import "./organization.css";
@@ -42,6 +42,7 @@ export default async function OrganizationPage({
       organizations={organizations}
       initialOrganizationId={initialOrganizationId}
       planUsage={planUsage}
+      tiffinOffered={tiffinTypeOffered()}
     />
   );
 }

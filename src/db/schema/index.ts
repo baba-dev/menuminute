@@ -31,3 +31,5 @@ export * from "./assistant-actions";
 export * from "./hospitality";
 
 export * from "./crm";
+
+export * from "./tiffin";

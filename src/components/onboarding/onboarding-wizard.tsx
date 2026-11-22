@@ -134,12 +134,15 @@ interface OnboardingWizardProps {
   initialQuick?: boolean;
   /** Account profile (e.g. from Google) used only to suggest empty contact fields. */
   prefill?: { name?: string; email?: string };
+  /** Server-computed TIFFIN_ENABLED result; never read server env in this client component. */
+  tiffinOffered?: boolean;
 }
 
 export function OnboardingWizard({
   onSuccess,
   initialQuick = false,
   prefill,
+  tiffinOffered = false,
 }: OnboardingWizardProps) {
   const router = useRouter();
   const prefillName = prefill?.name;
@@ -578,9 +581,13 @@ export function OnboardingWizard({
           <legend className="sr-only">{activeStepMeta.label}</legend>
           {currentStep === 0 &&
             (quickStart ? (
-              <QuickMenuIdentity draft={draft} onChange={updateDraft} />
+              <QuickMenuIdentity
+                draft={draft}
+                onChange={updateDraft}
+                tiffinOffered={tiffinOffered}
+              />
             ) : (
-              <StepIdentity draft={draft} onChange={updateDraft} />
+              <StepIdentity draft={draft} onChange={updateDraft} tiffinOffered={tiffinOffered} />
             ))}
           {currentStep === 1 && quickStart && (
             <QuickMenuRegion

@@ -43,6 +43,8 @@ type Props = {
   outlet: Outlet;
   initial: OutletProfileFields;
   canManage: boolean;
+  /** Server-computed TIFFIN_ENABLED result; the type is hidden unless true. */
+  tiffinOffered?: boolean;
 };
 const normalize = (fields: OutletProfileFields): OutletProfileFields => ({
   ...fields,
@@ -89,12 +91,14 @@ function OutletOperationsForm({
   outletId,
   outlet,
   canManage,
+  tiffinOffered,
 }: {
   organizationId: string;
   organizationVersion: number;
   outletId: string;
   outlet: Outlet;
   canManage: boolean;
+  tiffinOffered: boolean;
 }) {
   const router = useRouter();
   const initial = useMemo<OperationalDraft>(
@@ -223,7 +227,7 @@ function OutletOperationsForm({
               setDraft({
                 ...draft,
                 outletType,
-                fulfillmentModes: ["takeout", "cloud_kitchen"].includes(outletType)
+                fulfillmentModes: ["takeout", "cloud_kitchen", "tiffin"].includes(outletType)
                   ? ["pickup"]
                   : draft.fulfillmentModes,
               });
@@ -236,6 +240,9 @@ function OutletOperationsForm({
               ["cloud_kitchen", "Cloud kitchen"],
               ["hotel", "Hotel / food service"],
               ["mixed", "Other / mixed"],
+              ...(tiffinOffered || outlet.outletType === "tiffin"
+                ? [["tiffin", "Tiffin / Home chef"]]
+                : []),
             ].map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -256,6 +263,7 @@ function OutletOperationsForm({
                 <input
                   type="checkbox"
                   checked={draft.fulfillmentModes.includes(value)}
+                  disabled={value === "dine_in" && draft.outletType === "tiffin"}
                   onChange={(event) => toggleMode(value, event.target.checked)}
                 />
                 <span>{label}</span>
@@ -309,6 +317,7 @@ export function OutletAtelier({
   outlet,
   initial,
   canManage,
+  tiffinOffered = false,
 }: Props) {
   const [saved, setSaved] = useState<OutletProfileFields>(() => normalize(initial));
   const [draft, setDraft] = useState<OutletProfileFields>(() => normalize(initial));
@@ -512,6 +521,7 @@ export function OutletAtelier({
                 outletId={outletId}
                 outlet={outlet}
                 canManage={canManage}
+                tiffinOffered={tiffinOffered}
               />
               <dl className="os-info-grid">
                 <div>
