@@ -70,3 +70,11 @@ Keep MenuMinute platform subscription invoices, entitlements, payment collection
 Follow the present editorial dashboard and Service Counter: Ink & Ember light/dark styling, prominent legible numerical hierarchy, intentional Ember primary action, explicit success/conflict/uncertain states, reduced-motion support, and dense but readable tender/invoice tables. Avoid fake payment certification badges, unverifiable compliance marks or simulated provider acceptance.
 
 See [financial contracts](contracts.md) and [delivery and release acceptance](delivery.md) before implementation.
+
+## UPI Scan & Pay receipt block (implemented, not deployed)
+
+Design: [`docs/superpowers/specs/2026-11-21-receipt-upi-qr-design.md`](../superpowers/specs/2026-11-21-receipt-upi-qr-design.md). Plan: [`docs/superpowers/plans/2026-11-22-receipt-upi-qr.md`](../superpowers/plans/2026-11-22-receipt-upi-qr.md).
+
+Outlets can save their own UPI ID (Settings, "Get paid by UPI", or an optional onboarding step). Unpaid INR thermal receipts then print a two-section block: a QR carrying `upi://pay?pa=…&pn=…&am=…&cu=INR&tn=Bill …` beside the amount and instructions. This only prints a link the merchant's own UPI ID accepts. There is no payment-provider call, no confirmation and no change to how staff record payments. Available on all plans. Storage is `app_private.outlet_receipt_payment_profiles` (migration `0114`, `SECURITY DEFINER` read and save functions, compare-and-swap revision, history and audit without the UPI ID).
+
+Not verified: scanning the printed block with real UPI apps on real 58 and 80 mm printers (see `docs/android-release/device-test-matrix.md`). Do not advertise printer or UPI-app compatibility until those rows pass.

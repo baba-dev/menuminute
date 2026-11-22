@@ -24,6 +24,10 @@ A Trusted Web Activity runs inside Chrome. Chrome on Android offers Web Bluetoot
 - No order replay, offline finance write, or background printing exists.
 - Bluetooth Classic needs the printer **paired first** in Android settings (the dialog links there). Android 12+ asks for the Nearby devices / `BLUETOOTH_CONNECT` permission at first use.
 
+## UPI Scan & Pay block
+
+Unpaid INR receipts can include a raster image (`GS v 0`, sent in bands of at most 128 rows, about 17 KB on 80 mm) holding a UPI QR and instructions. It comes from the same `buildThermalReceipt` and `encodeThermalReceipt` as the receipt page, so it prints identically through this bridge and over BLE. If the outlet has no UPI profile, or the bill is paid, refunded or non-INR, the bytes are unchanged. Large image buffers on some printers are **untested on hardware**; see the matrix row "UPI Scan & Pay QR".
+
 ## Not covered
 
 Non-ESC/POS (proprietary-protocol) printers, label printers, network/Wi-Fi printers, and printing from outside the receipt page.

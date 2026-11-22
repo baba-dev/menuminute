@@ -1,6 +1,6 @@
 # Receipt UPI QR ("Scan & Pay") design
 
-Status: **proposed, awaiting owner approval. Nothing is implemented.** Date: 2026-11-21.
+Status: **approved by the owner on 2026-11-22; implemented on a feature branch, not deployed. Real-device scanning is unverified.** Date: 2026-11-21.
 
 ## Intent and why
 
