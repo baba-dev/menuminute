@@ -137,7 +137,7 @@ CREATE UNIQUE INDEX food_media_entry_path_key ON food_media(entry_id,path);
 CREATE FUNCTION app_private.food_public_payload(p_entry food_entries,p_revision food_revisions)
 RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path=pg_catalog,public,pg_temp AS $payload$
- SELECT jsonb_build_object(
+ SELECT jsonb_strip_nulls(jsonb_build_object(
    'id',p_entry.id,'kind',p_entry.kind,'slug',p_entry.slug,
    'title',p_revision.content->>'title',
    'eyebrow',p_revision.content->>'eyebrow',
@@ -152,10 +152,10 @@ SET search_path=pg_catalog,public,pg_temp AS $payload$
    'caution',p_revision.content->>'caution',
    'sourceUrls',coalesce(p_revision.content->'sourceUrls','[]'::jsonb),
    'status','published',
-   'reviewedBy',(SELECT u.name FROM users u WHERE u.id=p_revision.reviewed_by),
-   'reviewedAt',p_revision.reviewed_at,
-   'publishedAt',p_entry.published_at
- );
+   'reviewedBy',coalesce((SELECT u.name FROM users u WHERE u.id=p_revision.reviewed_by),'MenuMinute Editorial Team'),
+   'reviewedAt',to_char(p_revision.reviewed_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+   'publishedAt',to_char(p_entry.published_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+ ));
 $payload$;
 REVOKE ALL ON FUNCTION app_private.food_public_payload(food_entries,food_revisions)
   FROM PUBLIC,menuminute_app,menuminute_worker;
@@ -186,7 +186,7 @@ SET search_path=pg_catalog,public,pg_temp AS $list$
      AND (p_kind IS NULL OR p_kind='' OR e.kind=p_kind)
      AND (p_query IS NULL OR btrim(p_query)='' OR
        to_tsvector('simple',e.search_text) @@ plainto_tsquery('simple',left(p_query,100))
-       OR e.search_text ILIKE ('%' || replace(replace(left(p_query,100),'%','\\%'),'_','\\_') || '%') ESCAPE '\\'
+       OR strpos(lower(e.search_text),lower(left(p_query,100)))>0
      )
    ORDER BY e.published_at DESC,e.id
    LIMIT GREATEST(0,LEAST(coalesce(p_limit,30),100))
