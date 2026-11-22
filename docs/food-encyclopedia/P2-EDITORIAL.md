@@ -19,3 +19,11 @@ Draft -> Submit for review -> Distinct human superadmin approval -> Publish immu
 
 ## Validation
 Use frozen-lockfile install, TypeScript, lint/Prettier, Vitest integration, ARM64 Next compile, Playwright and independent database privilege review. Production releases require v7 helper, schema+media backups, exact-SHA checks, ERP coexistence checks and forward-only migration safety. A green PR is not production deployment.
+
+## P2 implementation update
+- Eight logical commits delivered on the PR branch, plus QA corrections as required.
+- Real database published pages supersede P1 sample previews. In production, no sample article is indexable or served as a substitute for reviewed content.
+- Public pages fail closed on missing migration or empty editorial store. Search excludes unapproved data, ad slots remain inactive.
+- The editorial form requires manual explicit Save with step-up; unattended autosave is intentionally not enabled, to avoid bypassing one-use administrator verification.
+- A separate independently approved superadmin is necessary to approve an author's submission; never self-approve.
+- **Migration dependency**: PR #366 has 0115/0116 but another branch added 0115 receipt UPI to current main. Coordinate migration renumbering and journal sequence before merging P2; no merge/deploy until conflict resolved.
