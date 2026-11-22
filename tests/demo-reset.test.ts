@@ -83,6 +83,17 @@ const PRESERVED: Record<string, string> = {
   razorpay_subscriptions: "billing is blocked for the demo org",
   restaurant_subscriptions: "billing",
   restaurants: "restored in place",
+  // Tiffin Hub (migration 0114): direct access revoked and nothing writes these in phase 1; the demo
+  // outlet is a restaurant, never a tiffin outlet, and demo code never resets them.
+  tiffin_areas: "tiffin planning table; never written for the demo outlet",
+  tiffin_combo_addons: "tiffin planning table; never written for the demo outlet",
+  tiffin_combo_items: "tiffin planning table; never written for the demo outlet",
+  tiffin_combos: "tiffin planning table; never written for the demo outlet",
+  tiffin_date_override_combos: "tiffin planning table; never written for the demo outlet",
+  tiffin_date_overrides: "tiffin planning table; never written for the demo outlet",
+  tiffin_slots: "tiffin planning table; never written for the demo outlet",
+  tiffin_week_menu_combos: "tiffin planning table; never written for the demo outlet",
+  tiffin_week_menus: "tiffin planning table; never written for the demo outlet",
   // POS ledger rows are immutable by design: the demo outlet never enables POS.
   pos_bills: "immutable POS ledger",
   pos_cash_movements: "immutable POS ledger",
