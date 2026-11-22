@@ -23,6 +23,10 @@ General Phase 4/5 launch holds have been lifted by owner decision; they are **no
 
 Free: ₹0, 20 dishes and 2 QR codes; Ordering: ₹119/month (USD listing $5); Kitchen Pro: ₹499/month flat for up to ten outlets (USD listing $20); Dedicated: ₹30,000/month or $3,000 private on-premise by contract. Prices and quotas derive from catalogs; purchase buttons must reflect runtime sale authority. **Do not advertise certified GST/VAT invoices, card settlement, all-device push, or a published Play app without separate verification.**
 
+## Planned: Tiffin & Home-Chef Hub
+
+Planned, not delivered: weekly menus, day booking, job cards, customer ledger and subscriptions for tiffin and home-chef outlets. See [Tiffin hub status](tiffin.md) and ADR 032.
+
 ## Source of truth
 
 - [Release status](release-status.md)

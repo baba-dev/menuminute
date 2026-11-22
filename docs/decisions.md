@@ -93,6 +93,12 @@ dish calculation examples, jurisdiction rules and complete UX remain explicit im
 Enabling any flag in production needs the owner's approval of the matching privacy and cookie notice;
 guest Web Push is implemented (ADR 031) and uses the existing staff push rollout gate.
 
+## Tiffin and home-chef hub (approved 21 November 2026; planned, not implemented)
+
+| ADR | Decision                                                                                                                                                                | Consequence                                                                                                                                                                                                                                                                                                                                                                         |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 032 | Tiffin planning layer creates real orders; delivery mode and slot link deferred to phase 3 with the order-function change; outlet type `tiffin` behind `TIFFIN_ENABLED` | Orders come from `app_private.submit_guest_order` (migration 0107), which validates against `restaurants.fulfillment_modes` (CHECK `fulfillment_valid`: dine_in/pickup only), so a delivery mode or order-to-slot link cannot land earlier. Phase 3 changes both in one migration. See [spec](superpowers/specs/2026-11-21-tiffin-home-chef-hub-design.md) and [status](tiffin.md). |
+
 ## Worldwide geographic scope clarified 2026-11-03
 
 Issue #8 owner direction: operate MenuMinute for restaurants worldwide. This reconfirms
