@@ -5,7 +5,7 @@
 ## Delivered product
 
 - Free permanent QR menus, menu import/review foundations, merchant onboarding, versioned publishing, private/approved media, QR Studio, outlet profiles, and responsive public browsing.
-- Guest ordering (including free-tier limited intake), authoritative quotes and service status, multi-station Kitchen Pro with routing/expeditor, staff workspaces, Dining Floor and the standard POS with cashier shifts/receipts.
+- Guest ordering (including free-tier limited intake), authoritative quotes and service status, multi-station Kitchen Pro with routing/expeditor, staff workspaces, Dining Floor and the standard POS with cashier shifts/receipts. Unpaid INR receipts can print a merchant-configured UPI Scan & Pay QR (implemented on a feature branch, not deployed; real-device scanning unverified).
 - Paid plans, guest CRM, merchant sales-tax quote/snapshot support (opt-in, non-fiscal), Android TWA foundation and signed internal AAB workflow, plus optional Google Play Billing server integration (disabled by default pending provider/store configuration).
 - Incremental security and UI fixes from PRs #306, #313, #321, #328, #330, #331, #332, #335, #338, #339, #342 and #344.
 

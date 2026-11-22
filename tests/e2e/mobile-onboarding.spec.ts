@@ -146,6 +146,13 @@ for (const size of SIZES) {
     await contactEmail.fill("");
     await next.click();
 
+    // Optional "Get paid by UPI" step: reachable, no overflow, skippable.
+    await expect(page.getByRole("heading", { name: "Get paid by UPI." })).toBeVisible();
+    expect(await overflowOffenders(page), "get paid step overflow").toEqual([]);
+    expect(await zoomTriggers(page), "get paid step zoom triggers").toEqual([]);
+    await snap("04b-wizard-get-paid");
+    await next.click();
+
     await expect(page.getByRole("heading", { name: "Review your outlet details." })).toBeVisible();
     expect(await overflowOffenders(page), "review overflow").toEqual([]);
     await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();

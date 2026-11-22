@@ -732,6 +732,16 @@ export const ownerArticles: HelpArticle[] = [
           text: "Printer setup depends on your device, browser and printer. Install or configure the printer using its manufacturer's instructions before printing a sample.",
         },
       },
+      {
+        id: "upi-scan-and-pay",
+        title: "3. Printing a UPI QR on unpaid bills",
+        content: [
+          "In Settings, open 'Get paid by UPI' and enter your UPI ID. Unpaid bills in Indian rupees then print a Scan & Pay block: a QR on one side and the amount with simple instructions on the other.",
+          "The QR opens your customer's UPI app with your payee details, the bill amount and the bill number already filled in. MenuMinute only prints the link; it does not process or confirm the payment.",
+          "Staff still record the payment in the till once they have actually received it. Paid, refunded and non-INR bills never print the QR.",
+          "Test with a real phone and your own printer before relying on it, because UPI apps and printers differ.",
+        ],
+      },
     ],
     faqs: [
       {

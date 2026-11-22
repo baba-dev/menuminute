@@ -1,4 +1,4 @@
--- 0117 Food Encyclopedia editorial foundation. Additive / app+worker direct access denied.
+-- 0118 Food Encyclopedia editorial foundation. Additive / app+worker direct access denied.
 -- IMPORTANT: #366 reserves 0115/0116; reconcile migration journal after that PR BEFORE merge.
 -- Public data remains empty until a separately approved human editorial review.
 CREATE TABLE food_entries (
@@ -125,7 +125,7 @@ DO $block$ DECLARE t text; BEGIN
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY',t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY',t);
     EXECUTE format('REVOKE ALL ON %I FROM PUBLIC,menuminute_app,menuminute_worker',t);
-    EXECUTE format('CREATE POLICY food_owner_only ON %I FOR ALL TO menuminute_owner USING (true) WITH CHECK (true)',t);
+    EXECUTE format('CREATE POLICY food_owner_only ON %I FOR ALL TO %I USING (true) WITH CHECK (true)',t,current_user);
   END LOOP;
 END $block$;
 
@@ -501,7 +501,9 @@ CREATE TABLE food_candidates (
 ALTER TABLE food_candidates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE food_candidates FORCE ROW LEVEL SECURITY;
 REVOKE ALL ON food_candidates FROM PUBLIC,menuminute_app,menuminute_worker;
-CREATE POLICY food_owner_only ON food_candidates FOR ALL TO menuminute_owner USING(true) WITH CHECK(true);
+DO $owner$ BEGIN
+ EXECUTE format('CREATE POLICY food_owner_only ON food_candidates FOR ALL TO %I USING(true) WITH CHECK(true)',current_user);
+END $owner$;
 
 CREATE FUNCTION app_private.food_editorial_candidates(p_limit integer)
 RETURNS TABLE(candidate jsonb) LANGUAGE plpgsql STABLE SECURITY DEFINER

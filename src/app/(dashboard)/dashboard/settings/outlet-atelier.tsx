@@ -17,6 +17,7 @@ import {
   Clock3,
   Navigation,
   ReceiptText,
+  QrCode,
 } from "lucide-react";
 import type { OutletProfileFields } from "@/modules/restaurants/profile";
 import { OutletTimezonePicker } from "@/components/onboarding/timezone-picker";
@@ -436,6 +437,9 @@ export function OutletAtelier({
             </a>
             <Link className="os-action" href="/dashboard/settings/tax">
               Sales tax preferences <ReceiptText size={17} aria-hidden="true" />
+            </Link>
+            <Link className="os-action" href="/dashboard/settings/payments">
+              Get paid by UPI <QrCode size={17} aria-hidden="true" />
             </Link>
           </div>
         </div>

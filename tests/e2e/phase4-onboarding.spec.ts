@@ -25,14 +25,14 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   await expect(page.getByTestId("verify-email-banner")).toContainText(email);
   await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();
   if ((page.viewportSize()?.width ?? 0) <= 640) {
-    await expect(page.locator(".wizard-mobile-step-pill")).toHaveText("Step 1 of 5");
+    await expect(page.locator(".wizard-mobile-step-pill")).toHaveText("Step 1 of 6");
   }
   await page.getByLabel(/Outlet Public Name/).fill("Kitchen for Guided Setup");
   await page.getByRole("radio", { name: /Online Ordering/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "Where is your outlet located?" })).toBeVisible();
   if ((page.viewportSize()?.width ?? 0) <= 640) {
-    await expect(page.locator(".wizard-mobile-step-pill")).toHaveText("Step 2 of 5");
+    await expect(page.locator(".wizard-mobile-step-pill")).toHaveText("Step 2 of 6");
   }
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(
@@ -41,6 +41,9 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   await expect(page.getByLabel("Operating timezone *")).toHaveValue("Asia/Kolkata");
   await expect(page.getByText(/Restaurant local time:/)).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  // The optional "Get paid by UPI" step can be skipped.
+  await expect(page.getByRole("heading", { name: "Get paid by UPI." })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "Review your outlet details." })).toBeVisible();
   let requests = 0;

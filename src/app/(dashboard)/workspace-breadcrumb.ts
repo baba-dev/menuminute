@@ -38,6 +38,7 @@ const nested: readonly { path: string; parent: string; label: string; prefix?: b
   { path: "/dashboard/reports/z-report", parent: "/dashboard/reports", label: "Z report" },
   { path: "/dashboard/settings/device", parent: "/dashboard/settings", label: "Device & app" },
   { path: "/dashboard/settings/tax", parent: "/dashboard/settings", label: "Sales tax" },
+  { path: "/dashboard/settings/payments", parent: "/dashboard/settings", label: "Get paid by UPI" },
   { path: "/dashboard/menu/import", parent: "/dashboard/menu", label: "Import menu" },
   { path: "/account/security", parent: "/account", label: "Security" },
 ];

@@ -1,5 +1,5 @@
 // Platform-owned editorial storage; no merchant tenancy scope or runtime table grants.
-// Migration 0117 is authoritative; access only through narrow SECURITY DEFINER functions.
+// Migration 0118 is authoritative; access only through narrow SECURITY DEFINER functions.
 import { sql } from "drizzle-orm";
 import {
   boolean, check, index, integer, jsonb, pgTable, text, timestamp, unique,
