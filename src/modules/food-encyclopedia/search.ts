@@ -12,13 +12,13 @@ function normalized(input: string): string {
     .replace(/\s+/g, " ");
 }
 const synonyms: Record<string, string> = {
-  "पनीर": "paneer",
-  "टिक्का": "tikka",
-  "बिरयानी": "biryani",
-  "समोसा": "samosa",
-  "डोसा": "dosa",
-  "रोटी": "roti",
-  "मसाला": "masala",
+  पनीर: "paneer",
+  टिक्का: "tikka",
+  बिरयानी: "biryani",
+  समोसा: "samosa",
+  डोसा: "dosa",
+  रोटी: "roti",
+  मसाला: "masala",
 };
 function queryTokens(raw: string): string[] {
   return normalized(raw)
@@ -28,7 +28,11 @@ function queryTokens(raw: string): string[] {
     .slice(0, 12);
 }
 export type FoodSearchResult = { entry: FoodEntry; score: number };
-export function searchFood(rawQuery: string | undefined, kind?: FoodKind, limit = 24): FoodSearchResult[] {
+export function searchFood(
+  rawQuery: string | undefined,
+  kind?: FoodKind,
+  limit = 24
+): FoodSearchResult[] {
   const query = cleanFoodQuery(rawQuery);
   const tokens = queryTokens(query);
   if (!tokens.length) return [];
@@ -42,7 +46,8 @@ export function searchFood(rawQuery: string | undefined, kind?: FoodKind, limit 
       const paragraphs = normalized(entry.sections.map((section) => section.title).join(" "));
       let score = 0;
       if (name === phrase || aliases.includes(phrase)) score += 110;
-      else if (name.startsWith(phrase) || aliases.some((alias) => alias.startsWith(phrase))) score += 75;
+      else if (name.startsWith(phrase) || aliases.some((alias) => alias.startsWith(phrase)))
+        score += 75;
       else if (name.includes(phrase)) score += 35;
       for (const token of tokens) {
         const inName = name.split(" ").some((word) => word.startsWith(token));

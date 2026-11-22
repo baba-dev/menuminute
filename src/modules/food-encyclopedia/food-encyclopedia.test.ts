@@ -14,14 +14,18 @@ describe("Food Encyclopedia editorial safety", () => {
   });
 
   it("requires a named review, sources and publication timestamps", () => {
-    const draft = allFoodPreviews()[0];
+    const draft = allFoodPreviews()[0]!;
     expect(isEditoriallyIndexable({ ...draft, status: "published" })).toBe(false);
-    expect(isEditoriallyIndexable({
-      ...draft, status: "published", reviewedBy: "Editorial Review",
-      reviewedAt: "2026-11-22T00:00:00.000Z",
-      publishedAt: "2026-11-22T01:00:00.000Z",
-      sourceUrls: ["https://example.org/reference"],
-    })).toBe(true);
+    expect(
+      isEditoriallyIndexable({
+        ...draft,
+        status: "published",
+        reviewedBy: "Editorial Review",
+        reviewedAt: "2026-11-22T00:00:00.000Z",
+        publishedAt: "2026-11-22T01:00:00.000Z",
+        sourceUrls: ["https://example.org/reference"],
+      })
+    ).toBe(true);
   });
 
   it("normalizes and bounds untrusted search input", () => {

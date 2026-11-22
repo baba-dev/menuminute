@@ -3,6 +3,7 @@
 **Issue:** #363. **Source visual review:** `/mnt/data/atlas_design` generated November 22, 2026 (not committed). **Figma:** https://www.figma.com/design/LNd5ZhhFjbXrD8T4stV24m.
 
 ## Delivered in this PR
+
 - Native Next.js 16 App Router routes: home, browse, search, all five editorial kinds.
 - SSR-first content; no independent client-side search library, API provider or dependency.
 - Bricolage Grotesque + DM Sans and responsive Ink & Ember styles, scoped under `.atlas-root`; respects existing light/dark/system theme.
