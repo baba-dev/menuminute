@@ -12,7 +12,7 @@ None yet. No tiffin tables, routes, flags or outlet type exist in the codebase.
 
 ## Planned phases 1–4
 
-1. **Contracts and foundations:** ADR, outlet type `tiffin` behind `TIFFIN_ENABLED`, schema for plans, combos and slots, with executable rollback.
+1. **Contracts and foundations:** ADR, outlet type `tiffin` behind `TIFFIN_ENABLED`, schema for plans, combos and slots, with executable rollback. `TIFFIN_ENABLED` defaults to false, so tiffin outlets are unreachable in production until it is enabled.
 2. **Weekly menu and combos:** authoring, quotes, public view, date overrides.
 3. **Day booking and job cards:** booking with cutoff and cap, orders integration (delivery mode and order-to-slot link land here), the three job-card views, print and share.
 4. **Customers, ledger and subscriptions:** owner-managed list, private link, ledger, materialization job, skips, pauses and dues.
@@ -28,6 +28,7 @@ creates orders, changes the function and the constraint in the same migration.
 ## Rules
 
 - The ledger is a record of what the owner tracks. It is not an invoice, a tax document or a payment.
+- Money is never moved by the app: the ledger records payments received outside the app.
 - Customer addresses are private customer data: scoped to the outlet, never public, never in logs.
 - Entitlements and outlet scope are checked in services, never in the UI.
 - Each phase ships only after the previous one passes its acceptance evidence.
