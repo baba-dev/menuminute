@@ -65,6 +65,25 @@ location /api/public-orders {
     add_header Cache-Control "private, no-store" always;
 }
 
+# Public tiffin weekly menu and quote: same signed proxy identity as guest orders (the application
+# rate limits per verified source). Plain prefix, NOT ^~, matching /api/public-orders. The quote
+# body is capped at 16 KiB by the application; nginx rejects larger bodies first.
+location /api/public-tiffin {
+    include /etc/menuminute/nginx-order-edge-secret.conf;
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-MenuMinute-Client-IP $remote_addr;
+    proxy_set_header X-MenuMinute-Edge-Key $menuminute_edge_secret;
+    proxy_read_timeout 30s;
+    client_max_body_size 16k;
+    proxy_hide_header Cache-Control;
+    add_header Cache-Control "private, no-store" always;
+}
+
 # Diner order-status SSE (PUBLIC_DINER_STREAM_ENABLED). Must be a regex location that wins over
 # the plain /api/public-orders prefix above. Unbuffered, uncompressed, uncached; the application
 # closes the stream before the 75s read timeout and sends heartbeats.
