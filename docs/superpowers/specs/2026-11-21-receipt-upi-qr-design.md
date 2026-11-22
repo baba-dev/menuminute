@@ -102,8 +102,9 @@ Validation, in one shared `parseUpiId` used by form, service and database CHECK:
 - Amount is a decimal string with exactly two places (for example `840.00`), derived from the minor-unit
   string with integer arithmetic, never floating point.
 - `pn` and `tn` are percent-encoded; `tn` is `Bill <orderNumber>` capped at 50 characters.
-- Output is capped (well under 200 characters) so the QR stays at version 4 or smaller and scannable at
-  4 dots per module on 58 mm paper.
+- Output is capped at 84 bytes so the QR at error-correction level M stays at version 5 (37 modules) and
+  is scannable at 4 dots per module on 58 mm paper. The payee name inside the link is shortened first to
+  fit; if it still does not fit, no block prints.
 - No `tr`, `mc` or `url` parameters (those are for registered merchants and can make some apps reject a
   personal VPA).
 
@@ -134,8 +135,8 @@ assumptions already in `thermalColumns`).
 └────────────────┴───────────────────┘
 ```
 
-- Left section: QR with a 4-module quiet zone, corner brackets and whole-dot module scaling (6 dots per
-  module on 80 mm, 4 on 58 mm; the scale is chosen as the largest integer that fits). A vertical rule
+- Left section: QR with a 4-module quiet zone, corner brackets and whole-dot module scaling (5 dots per
+  module on 80 mm, 4 on 58 mm). A vertical rule
   separates the sections.
 - Right section, top to bottom: "SCAN & PAY" heading, amount in larger type, a rule, three numbered
   steps, the payee name and the UPI ID. The bill number is in the QR note and in the existing header.
