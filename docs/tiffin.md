@@ -8,7 +8,35 @@ Nothing in this document is deployed. Merging is not deployment; production foll
 
 ## Implemented
 
-None yet. No tiffin tables, routes, flags or outlet type exist in the codebase.
+Phase 1 foundations exist in the codebase and are inert. They are not deployed by merging.
+
+- Migration 0114: `outlet_type_valid` widened to allow `tiffin`, plus nine empty, RLS-locked `tiffin_*` tables
+  (slots, combos with items and add-ons, week menus, date overrides, areas). Direct access is revoked from
+  `menuminute_app` and `menuminute_worker`; no code path reads or writes them yet.
+- The `TIFFIN_ENABLED` flag (default false) and `src/modules/tiffin/contracts.ts` (input schemas, `tiffinEnabled()`).
+- A server-gated, pickup-only `tiffin` outlet type: with the flag off, every path that sets an outlet type to
+  `tiffin` is rejected ("Tiffin outlets are not available yet"); an outlet that is already `tiffin` stays editable.
+  The onboarding, quick-menu, settings and organization forms offer the type only when the flag is on.
+
+No tiffin routes, booking, ledger or customer features exist.
+
+## Operator notes
+
+- **Do not set `TIFFIN_ENABLED=true` in production before phases 2-3.** With the flag on today, the onboarding
+  tile promises "meal boxes for subscribers" (`src/components/onboarding/wizard-steps/step-identity.tsx`), but the
+  outlet is only a pickup restaurant.
+- Migration 0114's CHECK swap takes an ACCESS EXCLUSIVE lock on `restaurants` and validates the whole table
+  (harmless at current size). Ship it through the helper v7 path after a fresh verified backup. The rollback
+  order is in the migration 0114 header.
+
+## Obligations for phases 2 and 3
+
+- A combo's currency must equal the outlet's `restaurants.currency`, and the existing "Explicit repricing
+  required" guard (migrations 0003/0008/0012) must also cover `tiffin_combos`.
+- The database provisioning functions (migrations 0029/0056/0075) pass `request_input->>'outletType'` straight into
+  the outlet row, and `outlet_type_valid` now accepts `tiffin`. The application-layer gate
+  (`assertOutletTypeAllowed` and the pickup-only check) is therefore the only guard and must stay airtight for
+  every new path that can create or change an outlet type.
 
 ## Planned phases 1–4
 

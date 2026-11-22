@@ -1,7 +1,7 @@
 # Tiffin & Home-Chef Hub — design
 
-Status: **proposed, awaiting owner approval.** This is a planning document. Nothing here is
-implemented, and it does not change the approved requirements; where it touches a rule the
+Status: **approved by the owner on 2026-11-21.** Phase 1 foundations are implemented and inert
+(`TIFFIN_ENABLED` defaults to false); phases 2-4 are planned. This is a planning document, and it does not change the approved requirements; where it touches a rule the
 requirements left open (scheduled pickup, delivery, customer phone collection), it records a
 proposal for the owner to approve. Read it with [product-requirements.md](../../product-requirements.md),
 [domain-invariants.md](../../domain-invariants.md), [plans-and-limits.md](../../plans-and-limits.md)

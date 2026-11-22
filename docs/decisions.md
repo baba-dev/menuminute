@@ -93,7 +93,7 @@ dish calculation examples, jurisdiction rules and complete UX remain explicit im
 Enabling any flag in production needs the owner's approval of the matching privacy and cookie notice;
 guest Web Push is implemented (ADR 031) and uses the existing staff push rollout gate.
 
-## Tiffin and home-chef hub (approved 21 November 2026; planned, not implemented)
+## Tiffin and home-chef hub (approved 21 November 2026; phase 1 foundations implemented, inert behind `TIFFIN_ENABLED`; phases 2-4 planned)
 
 | ADR | Decision                                                                                                                                                                | Consequence                                                                                                                                                                                                                                                                                                                                                                         |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
