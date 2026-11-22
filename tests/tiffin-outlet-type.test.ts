@@ -257,4 +257,33 @@ describe("tiffin outlet type gate", () => {
     });
     expect(await modes(f.outlet.id)).toEqual(["dine_in", "pickup"]);
   });
+
+  it("never strands onboarding in provisioning for a tiffin draft with dine-in", async () => {
+    vi.stubEnv("TIFFIN_ENABLED", "true");
+    const actor = await owner();
+    const bad = { ...base, outletType: "tiffin" as const, fulfillmentModes: ["dine_in" as const] };
+    await expect(saveOnboarding(actor, bad)).rejects.toMatchObject({ statusCode: 422 });
+    // Simulate a draft that predates the save-time check by writing it directly.
+    await admin(async (_d, pool) => {
+      await pool.query(
+        "insert into onboarding_progress(user_id,operation_key,draft) values($1,$2,$3::jsonb)",
+        [actor.userId, crypto.randomUUID(), JSON.stringify(bad)]
+      );
+    });
+    await expect(provisionOnboarding(actor)).rejects.toMatchObject({ statusCode: 422 });
+    const status = async () =>
+      admin(async (_d, pool) => {
+        const r = await pool.query("select status from onboarding_progress where user_id=$1", [
+          actor.userId,
+        ]);
+        return r.rows[0].status;
+      });
+    expect(await status()).toBe("draft");
+    expect(await outletsOf(actor.userId)).toBe(0);
+    const good = { ...bad, fulfillmentModes: ["pickup" as const] };
+    await saveOnboarding(actor, good);
+    const done = await provisionOnboarding(actor);
+    expect(done).toMatchObject({ status: "completed" });
+    expect(await outletsOf(actor.userId)).toBe(1);
+  });
 });

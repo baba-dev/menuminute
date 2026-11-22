@@ -39,6 +39,11 @@ describe("slotInputSchema", () => {
     expect(slotInputSchema.safeParse(slot).success).toBe(true);
     expect(slotInputSchema.safeParse({ ...slot, capacity: null }).success).toBe(true);
   });
+  it("bounds capacity to the integer column range", () => {
+    expect(slotInputSchema.safeParse({ ...slot, capacity: 2147483647 }).success).toBe(true);
+    expect(slotInputSchema.safeParse({ ...slot, capacity: 2147483648 }).success).toBe(false);
+    expect(slotInputSchema.safeParse({ ...slot, capacity: null }).success).toBe(true);
+  });
   it("rejects end <= start, negative capacity and bad bounds", () => {
     expect(slotInputSchema.safeParse({ ...slot, endMinute: 720 }).success).toBe(false);
     expect(slotInputSchema.safeParse({ ...slot, endMinute: 600 }).success).toBe(false);

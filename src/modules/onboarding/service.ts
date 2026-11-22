@@ -6,6 +6,7 @@ import {
   assertOutletTypeAllowed,
   createRestaurant,
   createRestaurantSchema,
+  tiffinFulfillmentModes,
 } from "@/modules/restaurants/service";
 import { env } from "@/lib/config/env";
 import { sendAuthEmail } from "@/lib/auth-email";
@@ -84,6 +85,9 @@ export async function onboardingState(actor: Actor) {
 export async function saveOnboarding(actor: Actor, input: unknown) {
   const draft = onboardingDraftSchema.parse(input);
   assertOutletTypeAllowed(draft.outletType);
+  // Reject at save so a tiffin draft can never reach provisioning with dine-in.
+  if (draft.outletType === "tiffin" && draft.fulfillmentModes !== undefined)
+    tiffinFulfillmentModes(draft.fulfillmentModes);
   return withActor(actor, async (tx) => {
     const current = await tx.execute<Progress>(
       sql`select operation_key,draft,status,outlet_id from onboarding_progress
@@ -128,6 +132,7 @@ export async function provisionOnboarding(actor: Actor) {
   if (!input.success) throw new ValidationError("Complete the required outlet settings.");
   // Before the draft is claimed as 'provisioning', so a disabled flag leaves it resumable.
   assertOutletTypeAllowed(input.data.outletType);
+  if (input.data.outletType === "tiffin") tiffinFulfillmentModes(input.data.fulfillmentModes);
   await withActor(actor, async (tx) => {
     const claimed = await tx.execute<{ operation_key: string }>(
       sql`update onboarding_progress set status='provisioning',updated_at=now()

@@ -240,7 +240,7 @@ function OutletOperationsForm({
               ["cloud_kitchen", "Cloud kitchen"],
               ["hotel", "Hotel / food service"],
               ["mixed", "Other / mixed"],
-              ...(tiffinOffered || draft.outletType === "tiffin"
+              ...(tiffinOffered || outlet.outletType === "tiffin"
                 ? [["tiffin", "Tiffin / Home chef"]]
                 : []),
             ].map(([value, label]) => (
@@ -263,6 +263,7 @@ function OutletOperationsForm({
                 <input
                   type="checkbox"
                   checked={draft.fulfillmentModes.includes(value)}
+                  disabled={value === "dine_in" && draft.outletType === "tiffin"}
                   onChange={(event) => toggleMode(value, event.target.checked)}
                 />
                 <span>{label}</span>

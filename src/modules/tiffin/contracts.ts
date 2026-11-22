@@ -13,7 +13,7 @@ export const slotInputSchema = z
     startMinute: z.number().int().min(0).max(1439),
     endMinute: z.number().int().min(1).max(1440),
     cutoffMinutesBefore: z.number().int().min(0).max(10080),
-    capacity: z.number().int().min(1).nullable(),
+    capacity: z.number().int().min(1).max(MAX_PRICE_MINOR).nullable(),
   })
   .refine((slot) => slot.endMinute > slot.startMinute, {
     message: "endMinute must be after startMinute",
