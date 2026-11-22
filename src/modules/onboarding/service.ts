@@ -2,7 +2,11 @@ import { createHash, createHmac } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { withActor, type Actor } from "@/modules/tenancy/service";
-import { createRestaurant, createRestaurantSchema } from "@/modules/restaurants/service";
+import {
+  assertFulfillmentModesForOutletType,
+  createRestaurant,
+  createRestaurantSchema,
+} from "@/modules/restaurants/service";
 import { env } from "@/lib/config/env";
 import { sendAuthEmail } from "@/lib/auth-email";
 import { AppError, ConflictError, ValidationError } from "@/lib/errors";
@@ -79,6 +83,7 @@ export async function onboardingState(actor: Actor) {
 }
 export async function saveOnboarding(actor: Actor, input: unknown) {
   const draft = onboardingDraftSchema.parse(input);
+  assertFulfillmentModesForOutletType(draft);
   return withActor(actor, async (tx) => {
     const current = await tx.execute<Progress>(
       sql`select operation_key,draft,status,outlet_id from onboarding_progress
@@ -121,6 +126,8 @@ export async function provisionOnboarding(actor: Actor) {
   if (!state.key) throw new ValidationError("Save your outlet settings first.");
   const input = createRestaurantSchema.safeParse(state.draft);
   if (!input.success) throw new ValidationError("Complete the required outlet settings.");
+  // Reject combinations the database would refuse before the draft is claimed as provisioning.
+  assertFulfillmentModesForOutletType(input.data);
   await withActor(actor, async (tx) => {
     const claimed = await tx.execute<{ operation_key: string }>(
       sql`update onboarding_progress set status='provisioning',updated_at=now()

@@ -299,3 +299,46 @@ it("stores independent operating and service schedules and does not publish priv
   );
   expect(JSON.stringify(projection.rows)).not.toContain("manager@private.test");
 });
+for (const outletType of ["takeout", "cloud_kitchen"] as const) {
+  it(`rejects dine-in for ${outletType} before claiming the draft, then provisions a corrected pickup-only draft`, async () => {
+    const actor = await verified();
+    const base = {
+      name: "Pickup Only Kitchen",
+      country: "IN",
+      currency: "INR",
+      timezone: "Asia/Kolkata",
+      outletType,
+    };
+    for (const fulfillmentModes of [["dine_in"], ["dine_in", "pickup"]] as const) {
+      await expect(
+        saveOnboarding(actor, { ...base, fulfillmentModes: [...fulfillmentModes] })
+      ).rejects.toMatchObject({ statusCode: 422 });
+    }
+    // A pre-fix or hand-written draft that bypassed save must also be rejected at provision,
+    // without being claimed (status must stay 'draft' and no outlet may exist).
+    const key = crypto.randomUUID();
+    await admin(async (_, pool) => {
+      await pool.query(
+        "insert into onboarding_progress(user_id,operation_key,draft) values($1,$2,$3::jsonb)",
+        [actor.userId, key, JSON.stringify({ ...base, fulfillmentModes: ["dine_in"] })]
+      );
+    });
+    await expect(provisionOnboarding(actor)).rejects.toMatchObject({ statusCode: 422 });
+    await admin(async (_, pool) => {
+      const progress = await pool.query("select status from onboarding_progress where user_id=$1", [
+        actor.userId,
+      ]);
+      expect(progress.rows[0].status).toBe("draft");
+      const outlets = await pool.query("select count(*)::int as n from restaurants where id=$1", [
+        createHash("sha256")
+          .update(actor.userId + ":" + key)
+          .digest("hex"),
+      ]);
+      expect(outlets.rows[0].n).toBe(0);
+    });
+    // The wizard is not stuck: a corrected draft saves and provisions.
+    await saveOnboarding(actor, { ...base, fulfillmentModes: ["pickup"] });
+    const done = await provisionOnboarding(actor);
+    expect(done).toMatchObject({ status: "completed" });
+  });
+}
