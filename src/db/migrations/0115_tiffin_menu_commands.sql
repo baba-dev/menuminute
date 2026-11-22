@@ -175,8 +175,14 @@ BEGIN
  IF NOT app_private.tiffin_can(p_outlet,'write') THEN RAISE EXCEPTION 'Not allowed' USING ERRCODE='42501'; END IF;
  PERFORM pg_advisory_xact_lock(hashtextextended('tiffin:'||p_outlet,0));
  IF NOT app_private.tiffin_can(p_outlet,'write') THEN RAISE EXCEPTION 'Not allowed' USING ERRCODE='42501'; END IF;
- -- FOR SHARE blocks a concurrent currency change until this save commits (see the currency guard).
- SELECT organization_id,currency INTO v_org,v_currency FROM restaurants WHERE id=p_outlet FOR SHARE;
+ -- Lock order matches manage_organization (organizations, then restaurants): the FK checks of the
+ -- inserts below take FOR KEY SHARE on the organization, so take it before any restaurants lock,
+ -- otherwise an org FOR UPDATE + UPDATE restaurants in another transaction deadlocks with this save.
+ SELECT organization_id INTO v_org FROM restaurants WHERE id=p_outlet;
+ PERFORM 1 FROM organizations WHERE id=v_org FOR KEY SHARE;
+ -- FOR SHARE blocks a concurrent currency change until this save commits (see the currency guard),
+ -- and a save that waited here re-reads the committed currency.
+ SELECT currency INTO v_currency FROM restaurants WHERE id=p_outlet AND organization_id=v_org FOR SHARE;
 
  IF NOT app_private.tiffin_keys_ok(p,ARRAY['id','name','description','priceMinor','items','addons','archived','currency'])
   THEN RAISE EXCEPTION 'Invalid combo' USING ERRCODE='22023'; END IF;

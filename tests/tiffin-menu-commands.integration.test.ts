@@ -1091,3 +1091,146 @@ describe("tiffin menu commands 0115 — migration ledger", () => {
     });
   });
 });
+
+describe("tiffin menu commands 0115 — lock ordering with organization and currency changes", () => {
+  const owner = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 2 });
+  afterAll(async () => {
+    await owner.end();
+  });
+
+  /** Resolves once the backend `pid` is blocked on a heavyweight lock (deterministic, no fixed sleep). */
+  async function waitUntilBlocked(pid: number) {
+    for (let i = 0; i < 500; i++) {
+      const r = await owner.query<{ n: number }>(
+        "select count(*)::int as n from pg_stat_activity where pid=$1 and wait_event_type='Lock'",
+        [pid]
+      );
+      if (r.rows[0]!.n > 0) return;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    throw new Error(`backend ${pid} never blocked on a lock`);
+  }
+  async function pidOf(client: PoolClient) {
+    return (await client.query<{ pid: number }>("select pg_backend_pid() as pid")).rows[0]!.pid;
+  }
+  async function setMenuCurrency(outletId: string, currency: string) {
+    await owner.query(
+      `update menus set document=jsonb_set(document,'{currency}',to_jsonb($2::text))
+       where id in (select menu_id from menu_assignments where outlet_id=$1)`,
+      [outletId, currency]
+    );
+  }
+  async function stored(outletId: string) {
+    const r = await owner.query<{ outlet: string; combos: string[] }>(
+      `select r.currency as outlet,
+         coalesce((select array_agg(c.currency order by c.created_at) from tiffin_combos c
+                   where c.outlet_id=r.id and not c.archived),'{}') as combos
+       from restaurants r where r.id=$1`,
+      [outletId]
+    );
+    return r.rows[0]!;
+  }
+
+  it("a combo save racing a manage_organization-style org lock + restaurants update never deadlocks", async () => {
+    const f = await tiffinFixture();
+    const existing = await call(f.userId, f.outlet.id, "tiffin_combo_save", combo());
+    const org = await owner.connect();
+    const save = await app.connect();
+    try {
+      // Session A: organizations FOR UPDATE first, exactly as manage_organization does.
+      await org.query("begin");
+      await org.query("select id from organizations where id=$1 for update", [f.org]);
+      // Session B: a combo save (items are always reinserted, so FK checks touch organizations).
+      await begin(save, f.userId, f.outlet.id);
+      const savePid = await pidOf(save);
+      const pending = save
+        .query("select app_private.tiffin_combo_save($1,$2::jsonb) as r", [
+          f.outlet.id,
+          JSON.stringify({ ...combo("Raced"), id: existing["id"] }),
+        ])
+        .then(
+          (r) => ({ ok: true as const, r }),
+          (e: PgError) => ({ ok: false as const, e })
+        );
+      await waitUntilBlocked(savePid);
+      // Session A continues: UPDATE restaurants (manage_organization's outlet.update shape).
+      await org.query(
+        "update restaurants set name=name,currency=currency,updated_at=now() where id=$1",
+        [f.outlet.id]
+      );
+      await org.query("commit");
+      const outcome = await pending;
+      if (!outcome.ok) await save.query("rollback");
+      expect(outcome.ok ? null : outcome.e.code).toBeNull();
+      await save.query("commit");
+    } finally {
+      await org.query("rollback").catch(() => undefined);
+      org.release();
+      save.release();
+    }
+    const menu = await call(f.userId, f.outlet.id, "tiffin_menu_read");
+    expect((menu["combos"] as Json[]).map((c) => c["name"])).toEqual(["Raced"]);
+  });
+
+  it("an in-flight combo insert blocks a currency change, which is then rejected (22023)", async () => {
+    const f = await tiffinFixture();
+    await setMenuCurrency(f.outlet.id, "USD");
+    const save = await app.connect();
+    const cur = await owner.connect();
+    try {
+      await begin(save, f.userId, f.outlet.id);
+      await save.query("select app_private.tiffin_combo_save($1,$2::jsonb)", [
+        f.outlet.id,
+        JSON.stringify(combo()),
+      ]);
+      await cur.query("begin");
+      const curPid = await pidOf(cur);
+      const pending = cur
+        .query("update restaurants set currency='USD' where id=$1", [f.outlet.id])
+        .then(
+          () => null,
+          (e: PgError) => e
+        );
+      await waitUntilBlocked(curPid);
+      await save.query("commit");
+      const error = await pending;
+      expect(error?.code).toBe("22023");
+      expect(error?.message).toBe("Explicit repricing required");
+      await cur.query("rollback");
+    } finally {
+      await save.query("rollback").catch(() => undefined);
+      await cur.query("rollback").catch(() => undefined);
+      save.release();
+      cur.release();
+    }
+    expect(await stored(f.outlet.id)).toEqual({ outlet: "INR", combos: ["INR"] });
+  });
+
+  it("a combo save waiting on an uncommitted currency change stores the new currency", async () => {
+    const f = await tiffinFixture();
+    await setMenuCurrency(f.outlet.id, "USD");
+    const cur = await owner.connect();
+    const save = await app.connect();
+    try {
+      await cur.query("begin");
+      await cur.query("update restaurants set currency='USD' where id=$1", [f.outlet.id]);
+      await begin(save, f.userId, f.outlet.id);
+      const savePid = await pidOf(save);
+      const pending = save.query<{ r: Json }>(
+        "select app_private.tiffin_combo_save($1,$2::jsonb) as r",
+        [f.outlet.id, JSON.stringify(combo())]
+      );
+      await waitUntilBlocked(savePid);
+      await cur.query("commit");
+      const saved = (await pending).rows[0]!.r;
+      await save.query("commit");
+      expect(saved["currency"]).toBe("USD");
+    } finally {
+      await cur.query("rollback").catch(() => undefined);
+      await save.query("rollback").catch(() => undefined);
+      cur.release();
+      save.release();
+    }
+    expect(await stored(f.outlet.id)).toEqual({ outlet: "USD", combos: ["USD"] });
+  });
+});
