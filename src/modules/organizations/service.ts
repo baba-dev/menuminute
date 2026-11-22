@@ -134,17 +134,25 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
       const commandData: Record<string, unknown> = { ...input.command.data };
       if (
         input.command.action === "outlet.update" &&
-        tiffinData?.outletType === TIFFIN_OUTLET_TYPE
+        (tiffinData?.outletType === TIFFIN_OUTLET_TYPE || tiffinData?.fulfillmentModes)
       ) {
         // Kill switch for new exposure only: an outlet that is already tiffin stays editable.
         // The current type is read in this tenant-scoped transaction, never from the client.
         const stored = await tx.execute<{ outlet_type: string }>(
           sql`select outlet_type from restaurants where id=${input.command.data.outletId} and organization_id=${organizationId}`
         );
-        if (stored.rows[0]?.outlet_type !== TIFFIN_OUTLET_TYPE)
+        const storedType = stored.rows[0]?.outlet_type;
+        if (tiffinData?.outletType === TIFFIN_OUTLET_TYPE && storedType !== TIFFIN_OUTLET_TYPE)
           assertOutletTypeAllowed(TIFFIN_OUTLET_TYPE);
+        // Effective type is the requested one, else the stored one: tiffin stays pickup-only.
+        if ((tiffinData?.outletType ?? storedType) === TIFFIN_OUTLET_TYPE) {
+          commandData.fulfillmentModes = tiffinFulfillmentModes(tiffinData?.fulfillmentModes);
+        }
       }
-      if (tiffinData?.outletType === TIFFIN_OUTLET_TYPE) {
+      if (
+        input.command.action === "outlet.create" &&
+        tiffinData?.outletType === TIFFIN_OUTLET_TYPE
+      ) {
         commandData.fulfillmentModes = tiffinFulfillmentModes(tiffinData.fulfillmentModes);
       }
       if (

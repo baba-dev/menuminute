@@ -213,4 +213,48 @@ describe("tiffin outlet type gate", () => {
     );
     expect(n).toBe(2);
   });
+
+  it("keeps tiffin pickup-only on updates that omit outletType", async () => {
+    vi.stubEnv("TIFFIN_ENABLED", "true");
+    const f = await fixture();
+    const org = f.outlet.organizationId;
+    const run = async (command: unknown) => {
+      const version = (await listOrganizations(f.actor))[0]!.version;
+      return manageOrganization(f.actor, org, {
+        key: crypto.randomUUID(),
+        expectedVersion: version,
+        command,
+      });
+    };
+    const modes = (id: string) =>
+      admin(async (_d, pool) => {
+        const r = await pool.query("select fulfillment_modes from restaurants where id=$1", [id]);
+        return r.rows[0].fulfillment_modes;
+      });
+    const tiffinId = String(
+      (
+        await run({
+          action: "outlet.create",
+          data: { ...base, outletType: "tiffin", fulfillmentModes: ["pickup"] },
+        })
+      ).outletId
+    );
+    for (const fulfillmentModes of [["dine_in"], ["dine_in", "pickup"]]) {
+      await expect(
+        run({ action: "outlet.update", data: { outletId: tiffinId, fulfillmentModes } })
+      ).rejects.toMatchObject({ statusCode: 422 });
+      expect(await modes(tiffinId)).toEqual(["pickup"]);
+    }
+    await run({
+      action: "outlet.update",
+      data: { outletId: tiffinId, fulfillmentModes: ["pickup"] },
+    });
+    expect(await modes(tiffinId)).toEqual(["pickup"]);
+    // Non-tiffin outlets are unchanged.
+    await run({
+      action: "outlet.update",
+      data: { outletId: f.outlet.id, fulfillmentModes: ["dine_in", "pickup"] },
+    });
+    expect(await modes(f.outlet.id)).toEqual(["dine_in", "pickup"]);
+  });
 });
