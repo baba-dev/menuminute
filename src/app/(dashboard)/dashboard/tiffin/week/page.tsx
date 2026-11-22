@@ -6,8 +6,7 @@ import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { tiffinNavEnabled } from "@/modules/tiffin/dashboard-access";
 import { readTiffinMenu } from "@/modules/tiffin/service";
-import { OverridesEditor } from "./overrides-editor";
-import { WeekEditor } from "./week-editor";
+import { WeekMenu } from "./week-menu";
 import "../tiffin.css";
 
 export const metadata: Metadata = {
@@ -51,22 +50,15 @@ export default async function TiffinWeekPage() {
         Choose which of your combos you offer for lunch and dinner each weekday, and close or change
         specific dates. This is your own menu text; MenuMinute does not check it for you.
       </p>
-      <WeekEditor
-        key={`week-${outlet.id}`}
-        outletId={outlet.id}
-        timezone={menu.outlet.timezone}
-        combos={menu.combos}
-        archivedCombos={menu.archivedCombos}
-        slots={menu.slots}
-        week={menu.week}
-      />
-      <OverridesEditor
-        key={`overrides-${outlet.id}`}
+      <WeekMenu
+        key={outlet.id}
         outletId={outlet.id}
         timezone={menu.outlet.timezone}
         today={menu.outlet.today}
         combos={menu.combos}
         archivedCombos={menu.archivedCombos}
+        slots={menu.slots}
+        week={menu.week}
         overrides={menu.overrides}
       />
     </main>

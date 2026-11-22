@@ -23,6 +23,8 @@ type Props = {
   combos: ComboRef[];
   archivedCombos: ComboRef[];
   overrides: OverrideView[];
+  /** Meals with a stored slot row; the server rejects overrides for any other meal. */
+  configuredKinds: SlotKind[];
 };
 
 const noopSubscribe = () => () => {};
@@ -48,12 +50,13 @@ export function OverridesEditor({
   combos,
   archivedCombos,
   overrides,
+  configuredKinds,
 }: Props) {
   const locale = useLocale();
   const allCombos = [...combos, ...archivedCombos.map((c) => ({ ...c, archived: true }))];
   const [list, setList] = useState(() => sortOverrides(overrides));
   const [date, setDate] = useState("");
-  const [slot, setSlot] = useState<SlotKind>("lunch");
+  const [slot, setSlot] = useState<SlotKind>(configuredKinds[0] ?? "lunch");
   const [mode, setMode] = useState<"close" | "replace">("close");
   const [ids, setIds] = useState<string[]>([]);
   const [dateError, setDateError] = useState("");
@@ -93,6 +96,9 @@ export function OverridesEditor({
     setNotice("");
     setDateError("");
     setFormError("");
+    if (!configuredKinds.includes(slot)) {
+      return fail(`Save ${slot} meal times first (in Meal times above).`);
+    }
     const problem = checkOverrideDate(date, zonedToday(new Date(), timezone));
     if (problem) return fail(problem, "date");
     if (mode === "replace" && ids.length === 0) {
@@ -196,14 +202,21 @@ export function OverridesEditor({
               id="override-slot"
               value={slot}
               disabled={saving}
+              aria-describedby={configuredKinds.includes(slot) ? undefined : "override-slot-hint"}
               onChange={(e) => setSlot(e.target.value as SlotKind)}
             >
               {SLOT_KINDS.map((kind) => (
-                <option key={kind} value={kind}>
+                <option key={kind} value={kind} disabled={!configuredKinds.includes(kind)}>
                   {SLOT_LABEL[kind]}
+                  {configuredKinds.includes(kind) ? "" : " (save meal times first)"}
                 </option>
               ))}
             </select>
+            {!configuredKinds.includes(slot) && (
+              <p className="tiffin-hint" id="override-slot-hint">
+                Save {slot} meal times first (in Meal times above).
+              </p>
+            )}
           </div>
         </div>
         <fieldset className="tiffin-fieldset">

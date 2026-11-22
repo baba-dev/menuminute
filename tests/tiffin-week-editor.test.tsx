@@ -25,6 +25,14 @@ const slots: SlotView[] = [
     capacity: 40,
     enabled: true,
   },
+  {
+    kind: "dinner",
+    startMinute: 1140,
+    endMinute: 1320,
+    cutoffMinutesBefore: 60,
+    capacity: null,
+    enabled: true,
+  },
 ];
 
 const fetchMock = vi.fn();
@@ -220,7 +228,7 @@ describe("slot settings", () => {
   it("sends defaults for a slot that was never saved", async () => {
     week({ slots: [] });
     reply(200, {});
-    fireEvent.click(screen.getByRole("button", { name: "Save dinner settings" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save dinner meal times" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(lastBody().slot).toEqual({
       kind: "dinner",
@@ -243,6 +251,7 @@ describe("OverridesEditor", () => {
         combos={combos}
         archivedCombos={archived}
         overrides={[]}
+        configuredKinds={["lunch", "dinner"]}
         {...over}
       />
     );
@@ -363,5 +372,86 @@ describe("OverridesEditor", () => {
     reply(422, { message: "Invalid override" });
     fireEvent.click(screen.getByRole("button", { name: "Save special date" }));
     expect((await screen.findByText("Invalid override")).getAttribute("role")).toBe("alert");
+  });
+});
+
+describe("never-saved slots", () => {
+  it("labels defaults as unsaved and disables grid saves with a linked explanation", () => {
+    week({ slots: [slots[0]!] }); // dinner has no stored row
+    expect(screen.getByText(/Not saved yet — save meal times first/)).toBeTruthy();
+    const save = screen.getByRole("button", { name: "Save Monday dinner" }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    const hint = document.getElementById(save.getAttribute("aria-describedby")!);
+    expect(hint?.textContent).toMatch(/Save dinner meal times first/);
+    fireEvent.click(save);
+    expect(fetchMock).not.toHaveBeenCalled();
+    // configured lunch is unaffected
+    expect(screen.queryByText(/Save lunch meal times first/)).toBeNull();
+    expect(screen.getAllByText(/Not saved yet/)).toHaveLength(1);
+  });
+
+  it("saves the proposal, then enables the grid without a reload", async () => {
+    week({ slots: [slots[0]!], week: [] });
+    addTo("Monday dinner", "Light lunch");
+    expect(
+      (screen.getByRole("button", { name: "Save Monday dinner" }) as HTMLButtonElement).disabled
+    ).toBe(true);
+    reply(200, { ...slots[1] });
+    fireEvent.click(screen.getByRole("button", { name: "Save dinner meal times" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(lastBody().slot).toEqual({
+      kind: "dinner",
+      startMinute: 1140,
+      endMinute: 1320,
+      cutoffMinutesBefore: 60,
+      capacity: null,
+      enabled: true,
+    });
+    await waitFor(() =>
+      expect(
+        (screen.getByRole("button", { name: "Save Monday dinner" }) as HTMLButtonElement).disabled
+      ).toBe(false)
+    );
+    expect(screen.queryByText(/Not saved yet/)).toBeNull();
+  });
+
+  it("blocks overrides for an unconfigured meal with a hint and no request", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-03-29T23:30:00Z"));
+    const view = render(
+      <OverridesEditor
+        outletId="out 1"
+        timezone="Europe/London"
+        today="2026-03-30"
+        combos={combos}
+        archivedCombos={archived}
+        overrides={[]}
+        configuredKinds={["dinner"]}
+      />
+    );
+    expect(
+      (screen.getByRole("option", { name: /Lunch \(save meal times first\)/ }) as HTMLOptionElement)
+        .disabled
+    ).toBe(true);
+    fireEvent.change(screen.getByLabelText("Meal"), { target: { value: "lunch" } });
+    fireEvent.change(screen.getByLabelText("Date"), { target: { value: "2026-04-01" } });
+    expect(screen.getByText("Save lunch meal times first (in Meal times above).")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Save special date" }));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert").textContent).toMatch(/Save lunch meal times first/);
+    view.rerender(
+      <OverridesEditor
+        outletId="out 1"
+        timezone="Europe/London"
+        today="2026-03-30"
+        combos={combos}
+        archivedCombos={archived}
+        overrides={[]}
+        configuredKinds={["dinner", "lunch"]}
+      />
+    );
+    reply(200, {});
+    fireEvent.click(screen.getByRole("button", { name: "Save special date" }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

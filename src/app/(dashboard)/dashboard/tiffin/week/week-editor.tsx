@@ -30,6 +30,8 @@ type Props = {
   archivedCombos: ComboRef[];
   slots: SlotView[];
   week: WeekEntry[];
+  /** Called after a first successful slot save so sibling editors can enable that meal. */
+  onSlotSaved?: (kind: SlotKind) => void;
 };
 
 const noopSubscribe = () => () => {};
@@ -48,11 +50,14 @@ const sameIds = (a: string[], b: string[]) =>
 function SlotPanel({
   outletId,
   stored,
+  configured,
   onSaved,
   announce,
 }: {
   outletId: string;
   stored: SlotView;
+  /** False when no slot row is stored: the values are a proposal, not saved settings. */
+  configured: boolean;
   onSaved: (slot: SlotView) => void;
   announce: (message: string) => void;
 }) {
@@ -104,6 +109,11 @@ function SlotPanel({
   return (
     <form className="tiffin-slot" onSubmit={submit} noValidate aria-labelledby={`${id}-title`}>
       <h3 id={`${id}-title`}>{SLOT_LABEL[kind]} settings</h3>
+      {!configured && (
+        <p className="tiffin-badge" id={`${id}-unsaved`}>
+          Not saved yet — save meal times first. These times are a suggestion you can change.
+        </p>
+      )}
       <div className="tiffin-slot-fields">
         <div className="tiffin-field">
           <label htmlFor={`${id}-start`}>{SLOT_LABEL[kind]} start time</label>
@@ -168,7 +178,11 @@ function SlotPanel({
       )}
       <div className="tiffin-actions">
         <button type="submit" className="tiffin-btn tiffin-primary" disabled={saving}>
-          {saving ? "Saving…" : `Save ${SLOT_LABEL[kind].toLowerCase()} settings`}
+          {saving
+            ? "Saving…"
+            : configured
+              ? `Save ${SLOT_LABEL[kind].toLowerCase()} settings`
+              : `Save ${SLOT_LABEL[kind].toLowerCase()} meal times`}
         </button>
       </div>
       {notice && (
@@ -180,7 +194,15 @@ function SlotPanel({
   );
 }
 
-export function WeekEditor({ outletId, timezone, combos, archivedCombos, slots, week }: Props) {
+export function WeekEditor({
+  outletId,
+  timezone,
+  combos,
+  archivedCombos,
+  slots,
+  week,
+  onSlotSaved,
+}: Props) {
   const locale = useLocale();
   const allCombos = [...combos, ...archivedCombos.map((c) => ({ ...c, archived: true }))];
   const [saved, setSaved] = useState(() => buildGrid(week, combos));
@@ -223,6 +245,7 @@ export function WeekEditor({ outletId, timezone, combos, archivedCombos, slots, 
     setAnnounce(`Saved ${name}.`);
   }
 
+  const isConfigured = (kind: SlotKind) => slotState.some((s) => s.kind === kind);
   const hasCombos = combos.length > 0;
   const days = orderedWeekdays(locale);
 
@@ -243,10 +266,12 @@ export function WeekEditor({ outletId, timezone, combos, archivedCombos, slots, 
                 key={`${kind}-${stored.startMinute}-${stored.endMinute}-${stored.enabled}`}
                 outletId={outletId}
                 stored={stored}
+                configured={slotState.some((s) => s.kind === kind)}
                 announce={setAnnounce}
-                onSaved={(slot) =>
-                  setSlotState((current) => [...current.filter((s) => s.kind !== kind), slot])
-                }
+                onSaved={(slot) => {
+                  setSlotState((current) => [...current.filter((s) => s.kind !== kind), slot]);
+                  onSlotSaved?.(kind);
+                }}
               />
             );
           })}
@@ -283,6 +308,12 @@ export function WeekEditor({ outletId, timezone, combos, archivedCombos, slots, 
                     <th key={kind} scope="col">
                       {SLOT_LABEL[kind]}
                       {slotFor(slotState, kind).enabled ? "" : " (off the menu)"}
+                      {!isConfigured(kind) && (
+                        <span className="tiffin-hint" id={`week-needs-${kind}`}>
+                          <br />
+                          Save {kind} meal times first
+                        </span>
+                      )}
                     </th>
                   ))}
                 </tr>
@@ -296,6 +327,7 @@ export function WeekEditor({ outletId, timezone, combos, archivedCombos, slots, 
                       const ids = draft[key]!;
                       const dirty = !sameIds(ids, saved[key]!);
                       const busy = savingKey === key;
+                      const needsSlot = !isConfigured(kind);
                       const label = `${weekdayName(weekday, locale)} ${SLOT_LABEL[kind].toLowerCase()}`;
                       const errorId = `week-error-${key}`;
                       return (
@@ -317,11 +349,12 @@ export function WeekEditor({ outletId, timezone, combos, archivedCombos, slots, 
                           <button
                             type="button"
                             className="tiffin-btn tiffin-primary"
-                            disabled={busy || !dirty}
+                            disabled={busy || !dirty || needsSlot}
+                            aria-describedby={needsSlot ? `week-needs-${kind}` : undefined}
                             aria-label={`Save ${label}`}
                             onClick={() => void saveCell(kind, weekday)}
                           >
-                            {busy ? "Saving…" : dirty ? "Save" : "Saved"}
+                            {busy ? "Saving…" : needsSlot ? "Save" : dirty ? "Save" : "Saved"}
                           </button>
                           {dirty && !busy && <span className="tiffin-dirty"> Unsaved changes</span>}
                         </td>
