@@ -5,6 +5,7 @@ import { env } from "@/lib/config/env";
 import { ForbiddenError, UnauthorizedError, ValidationError } from "@/lib/errors";
 import { posReceipt } from "@/modules/pos/service";
 import { buildThermalReceipt } from "@/modules/pos/thermal-view";
+import { getReceiptPaymentForPrint } from "@/modules/receipt-payment/service";
 import { encodeThermalReceipt, type ThermalPaper } from "@/lib/pos/thermal-receipt";
 import {
   getDefaultOrActiveRestaurant,
@@ -121,5 +122,10 @@ export async function redeemNativePrintGrant(token: unknown): Promise<Uint8Array
   );
   if (receipt.issuedDocumentId)
     throw new ValidationError("Issued fiscal documents are printed from the ledger document page");
-  return encodeThermalReceipt(buildThermalReceipt(receipt, outlet), grant.paper);
+  const payment = await getReceiptPaymentForPrint(
+    { userId: grant.uid, sessionId: grant.sid },
+    grant.org,
+    grant.out
+  );
+  return encodeThermalReceipt(buildThermalReceipt(receipt, outlet, payment), grant.paper);
 }

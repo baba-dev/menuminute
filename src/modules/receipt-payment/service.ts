@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { ConflictError, ForbiddenError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { normalizePayeeName, parseUpiId } from "@/lib/pos/upi";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 
@@ -72,6 +73,24 @@ export async function getOutletReceiptPayment(
   } catch (error) {
     if (sqlCode(error) === "42501") throw new ForbiddenError();
     throw error;
+  }
+}
+
+/** For the receipt print paths: a profile problem must never stop a bill from printing, so any
+ * failure is logged (without the UPI ID) and the receipt prints without the Scan & Pay block.
+ */
+export async function getReceiptPaymentForPrint(
+  actor: Actor,
+  organizationId: string,
+  outletId: string
+): Promise<ReceiptPaymentProfile | null> {
+  try {
+    return await getOutletReceiptPayment(actor, organizationId, outletId);
+  } catch (error) {
+    logger.warn("receipt payment profile unavailable; printing without the pay block", {
+      error: error instanceof Error ? error.name : "unknown",
+    });
+    return null;
   }
 }
 

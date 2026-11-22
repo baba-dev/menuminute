@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
   }>,
   receipt: { issuedDocumentId: null as string | null },
   posReceipt: vi.fn(),
+  paymentProfile: vi.fn(),
+  buildThermalReceipt: vi.fn(() => ({})),
 }));
 
 vi.mock("@/lib/config/env", () => ({
@@ -23,7 +25,10 @@ vi.mock("@/modules/restaurants/service", () => ({
   getRestaurantsByUserId: async () => state.outlets,
   getDefaultOrActiveRestaurant: async () => state.outlets[0],
 }));
-vi.mock("@/modules/pos/thermal-view", () => ({ buildThermalReceipt: () => ({}) }));
+vi.mock("@/modules/pos/thermal-view", () => ({ buildThermalReceipt: state.buildThermalReceipt }));
+vi.mock("@/modules/receipt-payment/service", () => ({
+  getReceiptPaymentForPrint: state.paymentProfile,
+}));
 vi.mock("@/lib/pos/thermal-receipt", () => ({
   encodeThermalReceipt: (_: unknown, paper: string) => new Uint8Array([0x1b, 0x40, Number(paper)]),
 }));
@@ -50,6 +55,9 @@ beforeEach(() => {
   state.receipt = { issuedDocumentId: null };
   state.posReceipt.mockReset();
   state.posReceipt.mockImplementation(async () => state.receipt);
+  state.paymentProfile.mockReset();
+  state.paymentProfile.mockResolvedValue(null);
+  state.buildThermalReceipt.mockClear();
 });
 
 describe("native print grant", () => {
@@ -101,5 +109,22 @@ describe("native print grant", () => {
 
     state.receipt = { issuedDocumentId: "doc1" }; // fiscal documents never print from here
     await expect(redeemNativePrintGrant(grant)).rejects.toThrow();
+  });
+
+  it("passes the outlet's receipt payment profile to the receipt builder", async () => {
+    const profile = { configured: true, upiId: "spice@okhdfc", enabled: true };
+    state.paymentProfile.mockResolvedValue(profile);
+    const { grant } = mintNativePrintGrant(scope);
+    await redeemNativePrintGrant(grant);
+    expect(state.paymentProfile).toHaveBeenCalledWith(
+      { userId: "u1", sessionId: "s1" },
+      "org1",
+      "out1"
+    );
+    expect(state.buildThermalReceipt).toHaveBeenCalledWith(
+      state.receipt,
+      state.outlets[0],
+      profile
+    );
   });
 });

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { isPlayClient } from "@/lib/app-distribution";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { posReceipt } from "@/modules/pos/service";
+import { getReceiptPaymentForPrint } from "@/modules/receipt-payment/service";
 import { ReceiptPrintActions } from "./receipt-print-actions";
 import { buildThermalReceipt, formatReceiptMoney as money } from "@/modules/pos/thermal-view";
 import "./receipt.css";
@@ -41,7 +42,12 @@ export default async function ReceiptPage({
   const paid = receipt.paymentStatus === "complete";
   const refunded = receipt.paymentStatus === "refunded";
   const staffPaid = paid && receipt.paymentEvidence === "staff_recorded";
-  const thermal = buildThermalReceipt(receipt, outlet);
+  const payment = await getReceiptPaymentForPrint(
+    { userId: session.user.id, sessionId: session.session.id },
+    outlet.organizationId,
+    outlet.id
+  );
+  const thermal = buildThermalReceipt(receipt, outlet, payment);
   return (
     <main className={"receipt-shell receipt-width-" + paper}>
       <header className="receipt-toolbar">

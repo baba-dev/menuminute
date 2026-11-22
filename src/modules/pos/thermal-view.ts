@@ -1,5 +1,8 @@
 import type { PosReceipt } from "@/modules/pos/service";
 import type { ThermalReceipt } from "@/lib/pos/thermal-receipt";
+import type { PayBlockInput } from "@/lib/pos/pay-block";
+import { buildUpiPayUri, inrMinorToDecimal } from "@/lib/pos/upi";
+import type { ReceiptPaymentProfile } from "@/modules/receipt-payment/service";
 
 /** Formats an immutable minor-unit string for display. Never used to recalculate totals. */
 export function formatReceiptMoney(minor: string, currency: string) {
@@ -13,14 +16,38 @@ export function formatReceiptMoney(minor: string, currency: string) {
 
 const money = formatReceiptMoney;
 
+/** The UPI "Scan & Pay" block for an unpaid INR bill, or null. The amount is the receipt's own total,
+ * never recalculated. Paid, refunded, non-INR, zero-total, disabled or unconfigured bills get none.
+ */
+export function payBlockForReceipt(
+  receipt: PosReceipt,
+  profile: ReceiptPaymentProfile | null | undefined
+): PayBlockInput | null {
+  if (!profile?.enabled || !profile.upiId || !profile.payeeName) return null;
+  if (receipt.currency !== "INR") return null;
+  if (receipt.paymentStatus === "complete" || receipt.paymentStatus === "refunded") return null;
+  const amountMinor = receipt.totalMinor ?? receipt.subtotalMinor;
+  const amount = inrMinorToDecimal(amountMinor);
+  const uri = buildUpiPayUri({
+    vpa: profile.upiId,
+    payeeName: profile.payeeName,
+    amountMinor,
+    billNo: String(receipt.orderNumber),
+  });
+  if (!amount || !uri) return null;
+  return { uri, amountLabel: "Rs " + amount, payeeName: profile.payeeName, upiId: profile.upiId };
+}
+
 /** Single mapping from the immutable POS receipt view to the thermal (ESC/POS) receipt.
  * Shared by the receipt page and the native print bridge so both print exactly the same facts.
  * Prices, taxes and statuses are copied from the receipt, never recalculated.
  */
 export function buildThermalReceipt(
   receipt: PosReceipt,
-  outlet: { name: string; timezone: string }
+  outlet: { name: string; timezone: string },
+  paymentProfile?: ReceiptPaymentProfile | null
 ): ThermalReceipt {
+  const payBlock = payBlockForReceipt(receipt, paymentProfile);
   const paid = receipt.paymentStatus === "complete";
   const refunded = receipt.paymentStatus === "refunded";
   const staffPaid = paid && receipt.paymentEvidence === "staff_recorded";
@@ -73,5 +100,6 @@ export function buildThermalReceipt(
           : "PAYMENT PENDING",
     taxDisclaimer:
       "Operational receipt only. Not a statutory tax invoice or gateway-confirmed payment.",
+    ...(payBlock ? { payBlock } : {}),
   };
 }
