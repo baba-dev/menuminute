@@ -70,6 +70,19 @@ describe("outlet receipt payment profile (real PostgreSQL)", () => {
       )
     );
     expect(history.rows.map((r) => r.revision)).toEqual([1, 2]);
+    // Like the audit trail, history never keeps the full UPI ID (only a masked hint).
+    const historyText = JSON.stringify(
+      (
+        await admin(async (_db, pool) =>
+          pool.query(
+            "select * from app_private.outlet_receipt_payment_profiles_history where outlet_id=$1",
+            [outlet.id]
+          )
+        )
+      ).rows
+    );
+    expect(historyText).not.toMatch(/spiceroute/i);
+    expect(historyText).toMatch(/@okhdfc/);
   });
 
   it("audits the change without ever storing the UPI ID", async () => {

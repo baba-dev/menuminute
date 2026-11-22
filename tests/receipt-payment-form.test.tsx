@@ -63,6 +63,14 @@ describe("ReceiptPaymentSettingsForm", () => {
     expect(screen.getByRole("button", { name: /save/i })).toBeDisabled();
   });
 
+  it("says so when a well-formed UPI ID is too long to fit the QR", () => {
+    render(<ReceiptPaymentSettingsForm {...props} />);
+    typeUpi("a".repeat(60) + "@okhdfcbank");
+    expect(screen.getByText(/too long/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save/i })).toBeDisabled();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
   it("shows the live preview and saves with the current revision", async () => {
     fetchMock.mockResolvedValue({
       ok: true,

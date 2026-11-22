@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { ConflictError, ForbiddenError, ValidationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
-import { normalizePayeeName, parseUpiId } from "@/lib/pos/upi";
+import { normalizePayeeName, parseUpiId, upiIdFitsQr } from "@/lib/pos/upi";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 
 /** Per-outlet UPI payee used to print a pre-filled "Scan & Pay" QR on unpaid INR receipts.
@@ -29,6 +29,14 @@ export const receiptPaymentCommandSchema = z
         const parsed = parseUpiId(value);
         if (!parsed) {
           ctx.addIssue({ code: "custom", message: "Enter a valid UPI ID such as name@bank." });
+          return z.NEVER;
+        }
+        if (!upiIdFitsQr(parsed)) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "This UPI ID is too long to fit in the QR code. Check it or use a shorter one.",
+          });
           return z.NEVER;
         }
         return parsed;
@@ -76,16 +84,30 @@ export async function getOutletReceiptPayment(
   }
 }
 
-/** For the receipt print paths: a profile problem must never stop a bill from printing, so any
- * failure is logged (without the UPI ID) and the receipt prints without the Scan & Pay block.
+/** For the receipt print paths: the profile only when this sale's order is still live (not
+ * cancelled, declined or expired), so a dead bill never invites payment. A problem here must never
+ * stop a bill from printing: any failure is logged (without the UPI ID) and the receipt prints
+ * without the Scan & Pay block.
  */
 export async function getReceiptPaymentForPrint(
   actor: Actor,
   organizationId: string,
-  outletId: string
+  outletId: string,
+  saleId: string
 ): Promise<ReceiptPaymentProfile | null> {
   try {
-    return await getOutletReceiptPayment(actor, organizationId, outletId);
+    return await withActor(actor, async (tx) => {
+      await tx.execute(sql`select set_config('app.outlet_id',${outletId},true)`);
+      const result = await tx.execute<{ profile: unknown }>(
+        sql`select app_private.read_outlet_receipt_payment(${organizationId},${outletId}) as profile`
+      );
+      const profile = profileSchema.parse(result.rows[0]?.profile);
+      if (!profile.configured || !profile.enabled) return profile;
+      const live = await tx.execute<{ live: boolean }>(
+        sql`select app_private.receipt_sale_accepts_payment(${outletId},${saleId}) as live`
+      );
+      return live.rows[0]?.live === true ? profile : null;
+    });
   } catch (error) {
     logger.warn("receipt payment profile unavailable; printing without the pay block", {
       error: error instanceof Error ? error.name : "unknown",

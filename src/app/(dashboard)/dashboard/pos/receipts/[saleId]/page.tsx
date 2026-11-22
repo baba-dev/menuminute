@@ -46,7 +46,8 @@ export default async function ReceiptPage({
   const payment = await getReceiptPaymentForPrint(
     { userId: session.user.id, sessionId: session.session.id },
     outlet.organizationId,
-    outlet.id
+    outlet.id,
+    saleId
   );
   const thermal = buildThermalReceipt(receipt, outlet, payment);
   return (

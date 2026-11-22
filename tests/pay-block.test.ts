@@ -49,15 +49,18 @@ describe("renderPayBlock", () => {
     it(`prints a QR that decodes back to the exact link on ${paper} mm`, () => {
       expect(decode(renderPayBlock(input, paper)!)).toBe(uri);
     });
-    it(`decodes a link at the 84-byte limit on ${paper} mm`, () => {
+    it(`decodes a longer link (QR version 6, up to 106 bytes) on ${paper} mm`, () => {
       const long = buildUpiPayUri({
-        vpa: "a-longish-restaurant@okaxis",
+        vpa: "spiceroutekitchen.business@okhdfcbank",
         payeeName: "Extraordinarily Long Kitchen Name",
-        amountMinor: "9999999",
+        amountMinor: "99999999",
         billNo: "123456",
       })!;
-      expect(long.length).toBeLessThanOrEqual(84);
-      expect(decode(renderPayBlock({ ...input, uri: long }, paper)!)).toBe(long);
+      expect(long.length).toBeGreaterThan(84);
+      expect(long.length).toBeLessThanOrEqual(106);
+      const block = renderPayBlock({ ...input, uri: long }, paper)!;
+      expect(block).not.toBeNull();
+      expect(decode(block)).toBe(long);
     });
     it(`never overflows the right edge with long text on ${paper} mm`, () => {
       const b = renderPayBlock(
@@ -78,7 +81,7 @@ describe("renderPayBlock", () => {
       expect(inkInColumns(b, Math.floor(width * 0.6), width - 6)).toBeGreaterThan(0);
     });
   }
-  it("returns null when the link needs more than QR version 5", () => {
+  it("returns null when the link needs more than QR version 6", () => {
     expect(renderPayBlock({ ...input, uri: "upi://pay?pa=" + "a".repeat(200) }, "80")).toBeNull();
   });
 });

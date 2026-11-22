@@ -119,7 +119,8 @@ describe("native print grant", () => {
     expect(state.paymentProfile).toHaveBeenCalledWith(
       { userId: "u1", sessionId: "s1" },
       "org1",
-      "out1"
+      "out1",
+      "sale1"
     );
     expect(state.buildThermalReceipt).toHaveBeenCalledWith(
       state.receipt,

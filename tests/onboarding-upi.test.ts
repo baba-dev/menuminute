@@ -66,6 +66,9 @@ describe("upiStepProblem", () => {
     ).toBeNull();
     expect(upiStepProblem({ ...initialWizardDraft, upiId: "chai" })).toMatch(/UPI ID/);
     expect(
+      upiStepProblem({ ...initialWizardDraft, upiId: "a".repeat(60) + "@okhdfcbank" })
+    ).toMatch(/too long/i);
+    expect(
       upiStepProblem({ ...initialWizardDraft, upiId: "chai@okhdfc", upiPayeeName: "A" })
     ).toMatch(/payee name/i);
   });

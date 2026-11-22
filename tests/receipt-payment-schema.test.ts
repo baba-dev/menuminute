@@ -28,4 +28,12 @@ describe("receiptPaymentCommandSchema", () => {
     );
     expect(receiptPaymentCommandSchema.safeParse({ ...valid, enabled: "yes" }).success).toBe(false);
   });
+  it("rejects a well-formed UPI ID that is too long to fit in the QR link", () => {
+    const result = receiptPaymentCommandSchema.safeParse({
+      ...valid,
+      upiId: "a".repeat(60) + "@okhdfcbank",
+    });
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result.error?.issues)).toMatch(/too long/i);
+  });
 });

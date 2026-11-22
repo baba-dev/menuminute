@@ -24,8 +24,7 @@ export type PayBlockBitmap = {
   data: Uint8Array;
 };
 
-const MAX_QR_VERSION = 5;
-const QR_MODULES_V5 = 37;
+const MAX_QR_VERSION = 6;
 const QUIET_MODULES = 4;
 const BORDER = 2;
 const SECTION_PAD = 4;
@@ -87,7 +86,7 @@ function largestFittingScale(text: string, scales: number[], available: number) 
 
 const STEPS = ["1 Open any UPI app", "2 Scan this code", "3 Check name, pay, show staff the tick"];
 
-/** Returns null when the link needs more than QR version 5 or anything goes wrong; callers then
+/** Returns null when the link needs more than QR version 6 or anything goes wrong; callers then
  * print the receipt without the block.
  */
 export function renderPayBlock(input: PayBlockInput, paper: ThermalPaper): PayBlockBitmap | null {
@@ -98,7 +97,7 @@ export function renderPayBlock(input: PayBlockInput, paper: ThermalPaper): PayBl
     const wide = paper === "80";
     const width = wide ? 576 : 384;
     const scale = wide ? 5 : 4;
-    const leftWidth = (QR_MODULES_V5 + 2 * QUIET_MODULES) * scale + 2 * SECTION_PAD;
+    const leftWidth = (modules + 2 * QUIET_MODULES) * scale + 2 * SECTION_PAD;
     const rightX = BORDER + leftWidth + BORDER;
     const rightWidth = width - rightX - BORDER - 4;
     const available = rightWidth - 2 * TEXT_PAD_X;
@@ -158,7 +157,7 @@ export function renderPayBlock(input: PayBlockInput, paper: ThermalPaper): PayBl
       fillRect(s, x, dy > 0 ? y : y - arm + 2, 2, arm);
     }
     // QR modules, centred inside the quiet zone.
-    const offset = QUIET_MODULES + Math.floor((QR_MODULES_V5 - modules) / 2);
+    const offset = QUIET_MODULES;
     const qrX = BORDER + SECTION_PAD + offset * scale;
     const qrY = top + SECTION_PAD + offset * scale;
     for (let row = 0; row < modules; row++)

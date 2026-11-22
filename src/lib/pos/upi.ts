@@ -5,8 +5,11 @@
 
 import type { PayBlockInput } from "./pay-block";
 
-/** Maximum link size so the QR (error-correction level M) stays at version 5 (37 modules). */
-export const UPI_URI_MAX_BYTES = 84;
+/** Maximum link size in bytes (the link is ASCII, so this equals its length): QR version 6 at
+ * error-correction level M holds 106 bytes (41 modules). Realistic merchant UPI IDs up to about 50
+ * characters still fit; the payee name inside the link is shortened first to make room.
+ */
+export const UPI_URI_MAX_BYTES = 106;
 
 const UPI_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{1,255}@[a-zA-Z][a-zA-Z0-9]{1,63}$/;
 
@@ -35,6 +38,18 @@ export function inrMinorToDecimal(minor: string): string | null {
   const whole = value / 100n;
   const cents = (value % 100n).toString().padStart(2, "0");
   return `${whole}.${cents}`;
+}
+
+/** True when this UPI ID can always be printed: it fits a link for a realistic worst-case bill
+ * (up to Rs 999999.99, a 6-digit bill number and a 2-character payee hint). Use at save time so a
+ * merchant is told now, not discovered when bills print without the QR.
+ */
+export function upiIdFitsQr(raw: string): boolean {
+  const vpa = parseUpiId(raw);
+  return (
+    vpa !== null &&
+    buildUpiPayUri({ vpa, payeeName: "Sp", amountMinor: "99999999", billNo: "123456" }) !== null
+  );
 }
 
 /** Pre-filled UPI payment link, or null when any input is invalid or it cannot fit in

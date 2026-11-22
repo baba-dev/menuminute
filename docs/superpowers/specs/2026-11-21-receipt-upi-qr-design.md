@@ -102,17 +102,19 @@ Validation, in one shared `parseUpiId` used by form, service and database CHECK:
 - Amount is a decimal string with exactly two places (for example `840.00`), derived from the minor-unit
   string with integer arithmetic, never floating point.
 - `pn` and `tn` are percent-encoded; `tn` is `Bill <orderNumber>` capped at 50 characters.
-- Output is capped at 84 bytes so the QR at error-correction level M stays at version 5 (37 modules) and
-  is scannable at 4 dots per module on 58 mm paper. The payee name inside the link is shortened first to
-  fit; if it still does not fit, no block prints.
+- Output is capped at 106 bytes (QR version 6 at error-correction level M, 41 modules, still scannable at
+  4 dots per module on 58 mm paper). The payee name inside the link is shortened first to fit. The
+  cap was raised from 84 bytes (version 5) after review: 84 left out common merchant UPI IDs of 30 to
+  40 characters. A UPI ID that cannot fit a worst-case bill (Rs 999999.99, 6-digit bill number) is
+  rejected at save time with a clear message, so a merchant never discovers it at the printer.
 - No `tr`, `mc` or `url` parameters (those are for registered merchants and can make some apps reject a
   personal VPA).
 
 ### 3. When the block prints
 
 Only if all hold: the outlet profile exists and is enabled, receipt currency is `INR`, payment status is
-pending (not complete, not refunded), and the total is greater than zero. There is no "print always"
-toggle (my call, see below). Otherwise the receipt is byte-identical to today's.
+pending (not complete, not refunded), the order is still live (not cancelled, declined or expired), and
+the total is greater than zero. There is no "print always" toggle (my call, see below). Otherwise the receipt is byte-identical to today's.
 
 ### 4. Layout (one raster block)
 
@@ -173,7 +175,10 @@ assumptions already in `thermalColumns`).
 4. Built-in pixel font for the text, rather than canvas or server fonts.
 5. INR only.
 6. Settings writes need `outlet.manage` (owner and manager), same as tax settings.
-7. New migration `0114`; settings table lives in `app_private`.
+7. New migration `0114`; settings table lives in `app_private`; its history keeps only a masked UPI
+   hint, never the full ID.
+8. After a split or partial tender the QR still asks for the full total (known limitation, owner to
+   decide; only matters where POS finance tenders are enabled).
 
 ## Left to the builder
 

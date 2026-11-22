@@ -125,7 +125,8 @@ export async function redeemNativePrintGrant(token: unknown): Promise<Uint8Array
   const payment = await getReceiptPaymentForPrint(
     { userId: grant.uid, sessionId: grant.sid },
     grant.org,
-    grant.out
+    grant.out,
+    grant.sale
   );
   return encodeThermalReceipt(buildThermalReceipt(receipt, outlet, payment), grant.paper);
 }

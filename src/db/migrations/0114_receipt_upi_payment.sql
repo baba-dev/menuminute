@@ -21,7 +21,8 @@ CREATE TABLE app_private.outlet_receipt_payment_profiles_history (
   outlet_id text NOT NULL,
   revision integer NOT NULL,
   organization_id text NOT NULL,
-  upi_id text NOT NULL,
+  -- History keeps only a masked hint (never the full UPI ID), like the audit trail.
+  upi_id_hint text NOT NULL,
   payee_name text NOT NULL,
   enabled boolean NOT NULL,
   changed_by text NOT NULL REFERENCES users(id),
@@ -100,8 +101,8 @@ BEGIN
    upi_id=excluded.upi_id,payee_name=excluded.payee_name,enabled=excluded.enabled,
    revision=excluded.revision,updated_by=excluded.updated_by,updated_at=clock_timestamp();
  INSERT INTO app_private.outlet_receipt_payment_profiles_history(
-   outlet_id,revision,organization_id,upi_id,payee_name,enabled,changed_by)
- VALUES(p_outlet,v_revision,p_org,v_upi,v_name,v_enabled,v_actor);
+   outlet_id,revision,organization_id,upi_id_hint,payee_name,enabled,changed_by)
+ VALUES(p_outlet,v_revision,p_org,left(v_upi,2)||'***@'||split_part(v_upi,'@',2),v_name,v_enabled,v_actor);
  -- The UPI ID is deliberately not copied into the audit trail.
  INSERT INTO domain_audit(id,organization_id,actor_id,action,details)
  VALUES(gen_random_uuid()::text,p_org,v_actor,'outlet.receipt_payment.settings',
@@ -113,3 +114,20 @@ REVOKE ALL ON FUNCTION app_private.save_outlet_receipt_payment(text,text,integer
   FROM PUBLIC,menuminute_worker,menuminute_billing;
 GRANT EXECUTE ON FUNCTION app_private.save_outlet_receipt_payment(text,text,integer,jsonb)
   TO menuminute_app;
+
+-- A receipt for a cancelled, declined or expired order must never invite payment. Same live-status
+-- rule the POS register uses; only callers who may print the outlet's receipts can ask.
+CREATE FUNCTION app_private.receipt_sale_accepts_payment(p_outlet text,p_sale text)
+RETURNS boolean LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+BEGIN
+ IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
+   OR NOT app_private.pos_access(p_outlet,'read')
+ THEN RAISE EXCEPTION 'Outlet access denied' USING ERRCODE='42501'; END IF;
+ RETURN EXISTS (
+  SELECT 1 FROM pos_sales s JOIN orders o ON o.id=s.order_id AND o.restaurant_id=s.outlet_id
+  WHERE s.id=p_sale AND s.outlet_id=p_outlet AND o.status NOT IN ('cancelled','rejected','expired'));
+END $$;
+REVOKE ALL ON FUNCTION app_private.receipt_sale_accepts_payment(text,text)
+  FROM PUBLIC,menuminute_worker,menuminute_billing;
+GRANT EXECUTE ON FUNCTION app_private.receipt_sale_accepts_payment(text,text) TO menuminute_app;

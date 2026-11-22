@@ -5,6 +5,7 @@ import {
   normalizePayeeName,
   parseUpiId,
   samplePayBlock,
+  upiIdFitsQr,
 } from "../src/lib/pos/upi";
 
 describe("parseUpiId", () => {
@@ -60,23 +61,38 @@ describe("buildUpiPayUri", () => {
     billNo: "1042",
   };
   it("builds the exact pre-filled link", () => {
-    const uri = buildUpiPayUri({ ...base, payeeName: "Spice Route" });
+    const uri = buildUpiPayUri(base);
     expect(uri).toBe(
-      "upi://pay?pa=spiceroute@okhdfc&pn=Spice%20Route&am=840.00&cu=INR&tn=Bill%201042"
+      "upi://pay?pa=spiceroute@okhdfc&pn=Spice%20Route%20Kitchen&am=840.00&cu=INR&tn=Bill%201042"
     );
-    expect(new TextEncoder().encode(uri!).length).toBeLessThanOrEqual(84);
+    expect(new TextEncoder().encode(uri!).length).toBeLessThanOrEqual(106);
   });
-  it("shortens the payee name when the full link would exceed 84 bytes", () => {
-    const full = buildUpiPayUri(base)!;
-    expect(new TextEncoder().encode(full).length).toBeLessThanOrEqual(84);
-    expect(full).toContain("pn=Spice%20Route");
-    expect(full).not.toContain("Kitchen");
-  });
-  it("shortens a very long payee name to stay within 84 bytes", () => {
-    const uri = buildUpiPayUri({ ...base, payeeName: "The Extraordinarily Long Kitchen Name Co" });
+  it("shortens a very long payee name to stay within 106 bytes", () => {
+    const uri = buildUpiPayUri({
+      ...base,
+      vpa: "spiceroutekitchen.business@okhdfcbank",
+      payeeName: "The Extraordinarily Long Kitchen Name Co",
+    });
     expect(uri).not.toBeNull();
-    expect(new TextEncoder().encode(uri!).length).toBeLessThanOrEqual(84);
+    expect(new TextEncoder().encode(uri!).length).toBeLessThanOrEqual(106);
     expect(uri).toContain("pn=The");
+  });
+  it("fits realistic merchant UPI IDs for small and large bills, keeping a readable payee", () => {
+    for (const vpa of [
+      "bharatpe09876543210@yesbankltd",
+      "paytmqr281005050101abcdef@paytm",
+      "spiceroutekitchen.business@okhdfcbank",
+    ])
+      for (const [amountMinor, billNo] of [
+        ["84000", "1042"],
+        ["99999999", "123456"],
+      ] as const) {
+        const uri = buildUpiPayUri({ vpa, payeeName: "Spice Route Kitchen", amountMinor, billNo });
+        expect(uri, vpa + amountMinor).not.toBeNull();
+        expect(uri!.length).toBeLessThanOrEqual(106);
+        const pn = new URL(uri!.replace("upi://pay", "https://x/pay")).searchParams.get("pn")!;
+        expect(pn.length, vpa).toBeGreaterThanOrEqual(8);
+      }
   });
   it("cannot be made to add or split parameters", () => {
     const uri = buildUpiPayUri({ ...base, payeeName: "A&B=C" })!;
@@ -87,8 +103,18 @@ describe("buildUpiPayUri", () => {
   });
   it("returns null when the link can never fit or the amount is invalid", () => {
     expect(buildUpiPayUri({ ...base, vpa: "a".repeat(120) + "@okhdfc" })).toBeNull();
+    expect(buildUpiPayUri({ ...base, vpa: "a".repeat(80) + "@okhdfc" })).toBeNull();
     expect(buildUpiPayUri({ ...base, amountMinor: "0" })).toBeNull();
     expect(buildUpiPayUri({ ...base, payeeName: "" })).toBeNull();
+  });
+});
+
+describe("upiIdFitsQr", () => {
+  it("accepts realistic IDs and rejects ones that could never fit a link", () => {
+    expect(upiIdFitsQr("bharatpe09876543210@yesbankltd")).toBe(true);
+    expect(upiIdFitsQr("spiceroutekitchen.business@okhdfcbank")).toBe(true);
+    expect(upiIdFitsQr("a".repeat(60) + "@okhdfcbank")).toBe(false);
+    expect(upiIdFitsQr("not valid")).toBe(false);
   });
 });
 

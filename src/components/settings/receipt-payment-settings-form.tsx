@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { QrCode, Save } from "lucide-react";
 import { PayBlockPreview } from "@/components/pos/pay-block-preview";
-import { normalizePayeeName, parseUpiId, samplePayBlock } from "@/lib/pos/upi";
+import { normalizePayeeName, parseUpiId, samplePayBlock, upiIdFitsQr } from "@/lib/pos/upi";
 import type { ReceiptPaymentProfile } from "@/modules/receipt-payment/service";
 
 type Props = {
@@ -42,8 +42,9 @@ export function ReceiptPaymentSettingsForm({
   const parsedUpi = parseUpiId(upiId);
   const parsedName = normalizePayeeName(payeeName);
   const upiInvalid = upiId.trim().length > 0 && !parsedUpi;
+  const upiTooLong = Boolean(parsedUpi) && !upiIdFitsQr(parsedUpi!);
   const nameInvalid = payeeName.trim().length > 0 && !parsedName;
-  const valid = Boolean(parsedUpi && parsedName);
+  const valid = Boolean(parsedUpi && parsedName) && !upiTooLong;
   const dirty =
     parsedUpi !== saved.upiId || parsedName !== saved.payeeName || enabled !== saved.enabled;
   const preview = parsedUpi && parsedName ? samplePayBlock(parsedUpi, parsedName) : null;
@@ -140,13 +141,15 @@ export function ReceiptPaymentSettingsForm({
                 autoCapitalize="none"
                 spellCheck={false}
                 disabled={!canManage || busy}
-                aria-invalid={upiInvalid}
-                aria-describedby={upiInvalid ? "upi-id-error" : undefined}
+                aria-invalid={upiInvalid || upiTooLong}
+                aria-describedby={upiInvalid || upiTooLong ? "upi-id-error" : undefined}
                 className={inputClass}
               />
-              {upiInvalid && (
+              {(upiInvalid || upiTooLong) && (
                 <p id="upi-id-error" className="text-xs text-red-600">
-                  Enter a valid UPI ID such as name@bank.
+                  {upiTooLong
+                    ? "This UPI ID is too long to fit in the QR code. Check it or use a shorter one."
+                    : "Enter a valid UPI ID such as name@bank."}
                 </p>
               )}
             </div>
