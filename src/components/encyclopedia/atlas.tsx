@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
-import { ArrowRight, BookOpenText, ChevronRight, Leaf, Menu, Search, ShieldAlert, Sparkles, X } from "lucide-react";
+import { ArrowRight, BookOpenText, ChevronRight, Leaf, Menu, Search, ShieldAlert, Sparkles } from "lucide-react";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { foodPath, type FoodEntry } from "@/modules/food-encyclopedia/contracts";
 import { getRelatedFood } from "@/modules/food-encyclopedia/pilot";
