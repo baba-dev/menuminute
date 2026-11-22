@@ -33,3 +33,5 @@ export * from "./hospitality";
 export * from "./crm";
 
 export * from "./tiffin";
+
+export * from "./food-encyclopedia";
