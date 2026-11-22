@@ -15,7 +15,10 @@ test("Atlas homepage and browse fail closed without reviewed content", async ({ 
   await expect(page.getByRole("link", { name: /Paneer Tikka/i })).toHaveCount(0);
 });
 
-test("Search indexes only published articles and never shows AdSense", async ({ page, request }) => {
+test("Search indexes only published articles and never shows AdSense", async ({
+  page,
+  request,
+}) => {
   await page.goto("/explore");
   const search = page.getByRole("searchbox", { name: "Search food guides" });
   await search.fill("paneer tikka");
@@ -38,7 +41,8 @@ test("Atlas mobile navigation remains within the viewport", async ({ page }) => 
   expect(overflow).toBeLessThanOrEqual(1);
   await page.locator(".atlas-mobile-nav summary").click();
   await expect(
-    page.getByRole("navigation", { name: "Mobile encyclopedia" })
+    page
+      .getByRole("navigation", { name: "Mobile encyclopedia" })
       .getByRole("link", { name: /Ingredients/ })
   ).toBeVisible();
 });
@@ -48,7 +52,9 @@ test("Atlas public homepage has no serious WCAG A/AA violations", async ({ page 
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
-  expect(results.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""))).toEqual([]);
+  expect(
+    results.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""))
+  ).toEqual([]);
 });
 
 test("No draft or sample page is emitted in the public sitemap", async ({ request }) => {
@@ -60,6 +66,6 @@ test("No draft or sample page is emitted in the public sitemap", async ({ reques
 });
 
 test("Editorial admin requires authenticated privileged session", async ({ request }) => {
-  const response=await request.get("/admin/encyclopedia",{maxRedirects:0});
-  expect([302,303,307,308,404]).toContain(response.status());
+  const response = await request.get("/admin/encyclopedia", { maxRedirects: 0 });
+  expect([302, 303, 307, 308, 404]).toContain(response.status());
 });
